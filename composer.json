@@ -33,7 +33,7 @@
         "class": "Ryssbowh\\CacheWarmer\\CacheWarmer",
         "components": {
             "menus": "Ryssbowh\\CacheWarmer\\Services\\CacheWarmerService"
-        },
+        }
     },
 	"minimum-stability": "stable"
 }
