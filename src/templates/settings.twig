@@ -1,0 +1,21 @@
+{% import "_includes/forms" as forms %}
+
+{% set errors = settings.getErrors() %}
+
+{{ forms.checkboxesField({
+    label: 'Sites to warm up'|t('cachewarmer'),
+    name: 'sites',
+    options: sites,
+    value: settings['sites'],
+    errors: settings.getErrors('sites'),
+    })
+}}
+
+{{ forms.textareaField({
+    label: 'Urls to ignore'|t('cachewarmer'),
+    name: 'ignore',
+    value: settings.ignore,
+    errors: settings.getErrors('ignore'),
+    instructions: 'Enter urls or valid regex. One url per line.'|t('cachewarmer')
+    }) 
+}}

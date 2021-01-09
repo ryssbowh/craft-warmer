@@ -1,0 +1,39 @@
+{
+    "name": "ryssbowh/craft-warmer",
+    "description": "A simple cache warmer for Craft 3",
+    "type": "craft-plugin",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "caching"
+    ],
+    "support": {
+        "docs": "https://github.com/ryssbowh/craft-warmer/blob/master/README.md",
+        "issues": "https://github.com/ryssbowh/craft-warmer/issues"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Boris Blondin"
+        }
+    ],
+    "require": {
+        "craftcms/cms": "^3.5.0"
+    },
+    "autoload": {
+        "psr-4": {
+          "Ryssbowh\\CacheWarmer\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Cache Warmer",
+        "handle": "cachewarmer",
+        "class": "Ryssbowh\\CacheWarmer\\CacheWarmer",
+        "components": {
+            "menus": "Ryssbowh\\CacheWarmer\\Services\\CacheWarmerService"
+        },
+    },
+	"minimum-stability": "stable"
+}
