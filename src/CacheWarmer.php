@@ -2,6 +2,8 @@
 
 namespace Ryssbowh\CacheWarmer;
 
+use Ryssbowh\CacheWarmer\Models\Settings;
+use Ryssbowh\CacheWarmer\Services\CacheWarmerService;
 use craft\base\Plugin;
 
 class CacheWarmer extends Plugin
@@ -16,7 +18,11 @@ class CacheWarmer extends Plugin
 
         self::$plugin = $this;
 
-        if (Craft::$app->getRequest()->getIsConsoleRequest()) {
+        $this->setComponents([
+            'warmer' => CacheWarmerService::class
+        ]);
+
+        if (\Craft::$app->getRequest()->getIsConsoleRequest()) {
             $this->controllerNamespace = 'Ryssbowh\\CacheWarmer\\Console';
         }
     }
@@ -40,10 +46,11 @@ class CacheWarmer extends Plugin
     protected function settingsHtml(): string
     {
     	$sites = [];
-    	for (\Craft::$app->sites->getAllSites() as $site) {
+    	foreach (\Craft::$app->sites->getAllSites() as $site) {
     		$sites[$site->uid] = $site->name;
     	}
-        return Craft::$app->view->renderTemplate(
+    	// dd($sites);
+        return \Craft::$app->view->renderTemplate(
             'cachewarmer/settings',
             [
                 'settings' => $this->getSettings(),

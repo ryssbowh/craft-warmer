@@ -2,14 +2,29 @@
 
 {% set errors = settings.getErrors() %}
 
-{{ forms.checkboxesField({
-    label: 'Sites to warm up'|t('cachewarmer'),
-    name: 'sites',
-    options: sites,
-    value: settings['sites'],
-    errors: settings.getErrors('sites'),
-    })
-}}
+<div class="field sites">
+    <div class="heading">
+        <label>{{ 'Sites to warm up'|t('cachewarmer') }}</label>
+    </div>
+    {% for uid, name in sites %}
+        {{ forms.checkbox({
+            label: name,
+            name: 'sites[]',
+            value: uid,
+            checked: (uid in settings.sites)
+        }) }}
+    {% endfor %}
+</div>
+
+{% for uid, name in sites %}
+    {{ forms.textField({
+        class: 'sitemap-'~uid,
+        label: 'Sitemap url for {site}'|t('cachewarmer', {site: name}),
+        name: 'sitemaps[' ~ uid ~ ']',
+        value: settings.getSitemap(uid)
+        }) 
+    }}
+{% endfor %}
 
 {{ forms.textareaField({
     label: 'Urls to ignore'|t('cachewarmer'),
@@ -19,3 +34,20 @@
     instructions: 'Enter urls or valid regex. One url per line.'|t('cachewarmer')
     }) 
 }}
+
+{% js %}
+    function checkSitemapField(field) {
+        let sitemap = $('.sitemap-' + $(field).val()).parent().parent();
+        if ($(field).is(':checked')) {
+            sitemap.show();
+        } else {
+            sitemap.hide();
+        }
+    }
+    $.each($('.field.sites input'), function(){
+        checkSitemapField(this);
+    });
+    $('.field.sites input').click(function(){
+        checkSitemapField(this);
+    });
+{% endjs %}

@@ -2,26 +2,31 @@
 
 namespace Ryssbowh\CacheWarmer\Console;
 
+use Ryssbowh\CacheWarmer\CacheWarmer;
 use craft\console\Controller;
 use yii\console\ExitCode;
 
-class CacheWarmerController extends Controller
+class WarmController extends Controller
 {
 	const LOCK_FILE = '@root/storage/cache-warmer/lock';
 
 	/**
-	 * Sends the emails saved in database
+	 * Crawl the site(s) to warm up caches
 	 * @return int
 	 */
 	public function actionIndex()
 	{
-		if (!$this->canRun()) {
-			$this->stdout("Aborting.\n");
-			return ExitCode::IOERR;
-		}
+		// if (!$this->canRun()) {
+		// 	$this->stdout(\Craft::t('site',"Lock file exists, aborting.") . "\n");
+		// 	return ExitCode::IOERR;
+		// }
 		$this->lock();
 		try {
-			$this->stdout("Hello.\n");
+			$sites = CacheWarmer::$plugin->warmer->getCrawlableSites();
+			foreach ($sites as $site) {
+				$this->stdout(\Craft::t('site', "Crawling site {site} ...", ["site" => $site->name])."\n");
+				$urls = CacheWarmer::$plugin->warmer->getUrls($site);
+			}
 		} catch (\Exception $e) {
 			$this->stderr('Error : '.$e->getMessage()."\n");
 		}
@@ -40,13 +45,6 @@ class CacheWarmerController extends Controller
 		if (!$this->lockExists()) {
 			return true;
 		}
-		$wait = CacheWarmer::$plugin->getSettings()->forceUnlock;
-		$content = file_get_contents(\Craft::getAlias(self::LOCK_FILE));
-		if (($content + 60 * $wait) < time()) {
-			$this->stdout("Lock is older than ".$wait." min, breaking it.\n");
-			return true;
-		}
-		$this->stdout("Lock file exists.\n");
 		return false;
 	}
 

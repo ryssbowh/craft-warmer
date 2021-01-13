@@ -9,6 +9,7 @@ class Settings extends Model
 {
     public $sites = [];
     public $ignore = '';
+    public $sitemaps = [];
 
     /**
      * @return array
@@ -16,8 +17,14 @@ class Settings extends Model
     public function rules()
     {
         return [
-            ['sites', 'each', 'rule' => 'string'],
+            ['sites', 'each', 'rule' => ['string']],
+            ['sitemaps', 'each', 'rule' => ['string']],
             ['ignore', 'string']
         ];
+    }
+
+    public function getSitemap(string $uid)
+    {
+        return $this->sitemaps[$uid] ?? '';
     }
 }
