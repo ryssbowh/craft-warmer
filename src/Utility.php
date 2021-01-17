@@ -4,7 +4,7 @@ namespace Ryssbowh\CacheWarmer;
 
 use Craft;
 use GitWrapper\Exception\GitException;
-use Ryssbowh\CacheWarmer\Assets\UtilityAsset;
+use Ryssbowh\CacheWarmer\Assets\WarmerAsset;
 use Ryssbowh\Git\Assets\GitAsset;
 
 class Utility extends \craft\base\Utility
@@ -38,13 +38,19 @@ class Utility extends \craft\base\Utility
 	 */
 	public static function contentHtml (): string
 	{
-		\Craft::$app->view->registerAssetBundle(UtilityAsset::class);
+		\Craft::$app->view->registerAssetBundle(WarmerAsset::class);
+
+		$settings = CacheWarmer::$plugin->getSettings();
+		$service = CacheWarmer::$plugin->warmer;
 
 		return Craft::$app->view->renderTemplate('cachewarmer/utility', [
-			'sites' => CacheWarmer::$plugin->warmer->getCrawlableSites(),
-			'urls' => CacheWarmer::$plugin->warmer->getUrls(),
-			'total_urls' => CacheWarmer::$plugin->warmer->getTotalUrls(),
-			'max_execution_time' => ini_get('max_execution_time')
+			'sites' => $service->getCrawlableSites(),
+			'urls' => $service->getUrls(),
+			'total_urls' => $service->getTotalUrls(),
+			'max_execution_time' => ini_get('max_execution_time'),
+			'max_processes' => $settings->maxProcesses,
+			'max_urls' => $settings->maxUrls,
+			'locked' => !$service->canRun()
 		]);
 	}
 

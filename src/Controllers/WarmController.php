@@ -2,6 +2,7 @@
 
 namespace Ryssbowh\CacheWarmer\Controllers;
 
+use Ryssbowh\CacheWarmer\Assets\FrontAsset;
 use Ryssbowh\CacheWarmer\CacheWarmer;
 use Ryssbowh\CacheWarmer\Exceptions\CacheWarmerException;
 use craft\web\Controller;
@@ -9,47 +10,24 @@ use craft\web\Controller;
 class WarmController extends Controller
 {
 	/**
-	 * Crawl all sites to warm up caches for a front end request
+	 * Front request
 	 */
-	public function actionIndex()
+	public function actionFront()
 	{
+		$this->view->registerAssetBundle(FrontAsset::class);
+
+		$settings = CacheWarmer::$plugin->getSettings();
 		$service = CacheWarmer::$plugin->warmer;
-		$errors = [];
-		$warnings = [];
-		$urlCodes = [];
-		$message = '';
-		if ($service->canRun()) {
-			$service->lock();
-			try {
-				$data = $service->getUrls();
-				$total = $service->getTotalUrls();
-				$safe = $service->setExecutionTime($total);
-				if (!$safe) {
-					$warnings[] = \Craft::t('cachewarmer', 'Warning : Your max execution time is {time} seconds, which might be too small to crawl {number} urls', ['time' => ini_get('max_execution_time'), 'number' => $total]);
-				}
-				$message = \Craft::t('cachewarmer', "Crawling {number} urls ...", ["number" => $total]);
-				foreach ($data as $urls) {
-					foreach ($urls as $url) {
-						$urlCodes[$url] = $service->crawlOne($url);
-					}
-				}
-			} catch (\Exception $e) {
-				$errors[] = \Craft::t('cachewarmer', 'Error : {error}', ['error' => $e->getMessage()]);
-			}
-			$service->unlock();
-		} else {
-			$errors[] = \Craft::t('cachewarmer',"Cache warming process is already happening, aborting.");
-		}
-		$response = $this->renderTemplate('cachewarmer/front', [
-			'message' => $message,
-			'urlCodes' => $urlCodes,
-			'warnings' => $warnings,
-			'errors' => $errors,
+
+		return $this->renderTemplate('cachewarmer/front', [
+			'sites' => $service->getCrawlableSites(),
+			'urls' => $service->getUrls(),
+			'total_urls' => $service->getTotalUrls(),
+			'max_execution_time' => ini_get('max_execution_time'),
+			'max_processes' => $settings->maxProcesses,
+			'max_urls' => $settings->maxUrls,
+			'locked' => !$service->canRun()
 		]);
-		if ($errors) {
-			$response->statusCode = 400;
-		}
-		return $response;
 	}
 
 	public function actionCrawl()
@@ -73,7 +51,9 @@ class WarmController extends Controller
 	public function actionUnlock()
 	{
 		CacheWarmer::$plugin->warmer->unlock();
-		return $this->asJson(['success' => true]);
+		return $this->asJson([
+			'message' => \Craft::t('cachewarmer', 'The lock has been removed')
+		]);
 	}
 
 	protected function doCrawl($limit, int $current = 0)

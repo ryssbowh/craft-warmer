@@ -4,20 +4,19 @@ Build up your caches for your Craft site with a cache warmer.
 
 The warmer will look at your sites(s) sitemap.xml and crawl them, building the caches (image transforms, imager, html etc) and making the site load faster for your user. This can be useful when clearing the caches after a release for example, or anytime you clear a site's caches.
 
-Some urls can be ignored in the backend's settings.
+Some urls can be ignored in the backend's settings, for each site.
 
 There are 3 ways to trigger it :
-- Through the utility menu
-- command : `php craft cachewarmer/warm`
+- With the utility control panel menu
+- With a command : `php craft cachewarmer/warm`
 - Or enable the front end url in the settings and visit that url
 
-Front end and Command trigger will be subject to the max execution time your php is allowed to have. If it's too low the warmer will try to adjust it, but in some cases it's not possible, the server prevents it.
-
-The utility trigger will take into account this setting and will behave accordingly (by spawning multiple smaller crawls).
+The front end and the control panel triggers will benefit from parallel execution, making the process quicker. The amount of processes and the amount of urls one process will crawl are editable in settings.
+You can also let the system decide the amount of urls to crawl in each process according to your php setting 'max_execution_time', in which case it will assume one url takes 2 seconds to crawl.
 
 ##Installation
 
-Install through composer `composer require ryssbowh/craft-warmer`
+Install through composer `composer require ryssbowh/craft-warmer` or using the Craft store.
 Activate site(s) in the settings.
 
 ##Requirements

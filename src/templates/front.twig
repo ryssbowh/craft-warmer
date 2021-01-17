@@ -1,32 +1,50 @@
-<html>
-	<head>
-		<style>
-		.error {
-			color: #d12626;
-		}
-		.warning {
-			color: #fc8c03;
-		}
-		p{
-			margin-bottom: 0.5rem;
-		}
-		</style>
-		<title>{{ 'Cache Warmer'|t('cachewarmer') }}</title>
-	</head>
-	<body>
-		{% for error in errors %}
-			<p class="error">{{ error }}</p>
-		{% endfor %}
-		{% for warning in warnings %}
-			<p class="warning">{{ warning }}</p>
-		{% endfor %}
-		<p>{{ message }}</p>
-		{% for url, code in urlCodes %}
-			{% if code == 200 %}
-				<p>{{ 'Crawled {url} : {code}'|t('cachewarmer', {code: code, url: url}) }}</p>
-			{% else %}
-				<p>{{ 'Crawled {url} : {code}'|t('cachewarmer', {code: '<span class="error">'~code~'</span>', url: url})|raw }}</p>
-			{% endif %}
-		{% endfor %}
-	</body>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="{{ craft.app.language }}">
+<head>
+    {{ head() }}
+    <title>{{ currentSite.name }} | {{ 'Cache Warmer'|t('cachewarmer') }}</title>
+</head>
+<body>
+    {{ beginBody() }}
+
+    <div id="notifications"></div>
+
+    {% include "cachewarmer/cache-warmer" %}
+
+	{{ endBody() }}
+</body>
 </html>
+
+{% js %}
+	var max_execution_time = {{ max_execution_time }};
+	var total_urls = {{ total_urls }};
+	var max_urls = {% if max_urls %}{{ max_urls }}{% else %}''{% endif %};
+	var max_processes = {{ max_processes }};
+
+	function warm(modal, cachewarmer) {
+		modal.show();
+		cachewarmer.run().done(function(results){
+			modal.addResults(results);
+		}).fail(function(response){
+			modal.hide();
+			Craft.cp.displayError(response.responseJSON.error);
+			$('.break-lock').fadeIn('fast');
+		});
+	}
+
+	$(document).ready(function(){
+		new Craft.CacheWarmer.Modal('#cachewarmer-modal');
+		let modal = $('#cachewarmer-modal').data('modal');
+		let cachewarmer = new CacheWarmer(max_execution_time, total_urls, max_urls, max_processes, modal);
+		$('.warmthemup').click(function(){
+			warm(modal, cachewarmer);
+		});
+		$('.break-lock button').click(function(){
+			cachewarmer.unlock().done(function(data){
+				Craft.cp.displayNotice(data.message);
+				$('.break-lock').fadeOut('fast');
+			});
+		});
+		warm(modal, cachewarmer);
+	});
+{% endjs %}

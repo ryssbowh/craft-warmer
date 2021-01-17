@@ -10,7 +10,9 @@ class Settings extends Model
     public $sites = [];
     public $ignore = [];
     public $enableFrontUrl = false;
-    public $frontUrl = 'warm-cache';
+    public $maxProcesses = 1;
+    public $maxUrls = '';
+    public $frontUrl = 'warm-caches';
     public $sitemaps = [];
 
     /**
@@ -22,6 +24,8 @@ class Settings extends Model
             ['sites', 'each', 'rule' => ['string']],
             ['ignore', 'each', 'rule' => ['string']],
             ['sitemaps', 'each', 'rule' => ['string']],
+            ['maxProcesses', 'integer', 'min' => 1],
+            ['maxUrls', 'integer', 'min' => 1],
             [['frontUrl'], 'string'],
             ['enableFrontUrl', 'boolean'],
         ];

@@ -2,24 +2,28 @@
 
 {% set errors = settings.getErrors() %}
 
-{{ forms.lightswitchField({
+<h2>{{ 'Front url'|t('cachewarmer') }}</h2>
+
+{{ forms.lightswitch({
     id: 'enable-front-url-field',
-    label: 'Enable front url'|t('cachewarmer'),
+    label: 'Enabled'|t('cachewarmer'),
     name: 'enableFrontUrl',
     on: settings.enableFrontUrl
 }) }}
 
 {{ forms.textField({
     id: 'front-url',
-    label: 'Front url'|t('cachewarmer'),
+    label: 'Url'|t('cachewarmer'),
     name: 'frontUrl',
     value: settings.frontUrl,
     instructions: 'Don\'t include site url, example : warm-cache'|t('cachewarmer'),
     errors: settings.getErrors('frontUrl'),
+    size: 20
     }) 
 }}
 
 <div class="sites">
+    <h2>{{ 'Sites'|t('cachewarmer') }}</h2>
     {% for uid, name in sites %}
         <h3>{{ name }}</h3>
         {{ forms.lightswitch({
@@ -29,39 +33,73 @@
             class: 'site-enable',
             on: (uid in settings.sites)
         }) }}
-        {{ forms.textareaField({
-            label: 'Urls to ignore'|t('cachewarmer'),
-            name: 'ignore['~uid~']',
-            value: settings.getIgnore(uid),
-            instructions: 'Enter valid regex (/forums\\/*/) or paths (forums/article1), don\'t include site url, one per line.'|t('cachewarmer')
-            }) 
-        }}
-        {{ forms.textField({
-            label: 'Sitemap'|t('cachewarmer'),
-            name: 'sitemaps['~uid~']',
-            value: settings.getSitemap(uid),
-            instructions: 'Don\'t include site url'|t('cachewarmer'),
-            }) 
-        }}
+        <div style="margin-top:20px">
+            {{ forms.textareaField({
+                label: 'Urls to ignore'|t('cachewarmer'),
+                name: 'ignore['~uid~']',
+                value: settings.getIgnore(uid),
+                instructions: 'Enter one valid regex (/forums\\/*/) or path (forums/article1) per line, don\'t include site url.'|t('cachewarmer'),
+                cols: 50,
+                rows: 5
+                }) 
+            }}
+            {{ forms.textField({
+                label: 'Sitemap'|t('cachewarmer'),
+                name: 'sitemaps['~uid~']',
+                value: settings.getSitemap(uid),
+                instructions: 'Don\'t include site url'|t('cachewarmer'),
+                size: 20
+                }) 
+            }}
+        </div>
     {% endfor %}
 </div>
+
+<h2>{{ 'Advanced'|t('cachewarmer') }}</h2>
+
+<p><i>{{ 'Those settings don\'t apply to the command line.' }}</i></p>
+
+{{ forms.textField({
+    type: 'number',
+    label: 'Max number of processes'|t('cachewarmer'),
+    instructions: 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.'|t('cachewarmer'),
+    name: 'maxProcesses',
+    value: settings.maxProcesses,
+    errors: settings.getErrors('maxProcesses'),
+    required: true,
+    size: 20,
+    min: 1
+    }) 
+}}
+
+{{ forms.textField({
+    type: 'number',
+    label: 'Max number of urls'|t('cachewarmer'),
+    instructions: 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.'|t('cachewarmer'),
+    name: 'maxUrls',
+    value: settings.maxUrls,
+    errors: settings.getErrors('maxUrls'),
+    size: 20,
+    min: 1
+    }) 
+}}
 
 {% js %}
     function checkFrontUrl() {
         let enable = $('#settings-enable-front-url-field input');
         let url = $('#settings-front-url-field');
         if (enable.val() == 1) {
-            url.show();
+            url.slideDown('fast');
         } else {
-            url.hide();
+            url.slideUp('fast');
         }
     }
-    function checkIgnore(lightswitch) {
+    function checkSiteSettings(lightswitch) {
         let ignore = lightswitch.parent().parent().next();
         if (lightswitch.hasClass('on')) {
-            ignore.show();
+            ignore.slideDown('fast');
         } else {
-            ignore.hide();
+            ignore.slideUp('fast');
         }
     }
     checkFrontUrl();
@@ -69,9 +107,9 @@
         checkFrontUrl();
     });
     $.each($('.sites .lightswitch'), function(){
-        checkIgnore($(this));
+        checkSiteSettings($(this));
     });
     $('.sites .lightswitch').change(function(){
-        checkIgnore($(this));
+        checkSiteSettings($(this));
     });
 {% endjs %}

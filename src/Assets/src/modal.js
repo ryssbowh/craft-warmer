@@ -6,17 +6,18 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 	$closeBtn: null,
 	$progress: null,
 	$results: null,
+	$resultsContainer: null,
 	init: function(container, settings) {
 		this.setSettings(settings, Garnish.Modal.defaults);
 		this.$shade = $('<div class="' + this.settings.shadeClass + '"/>');
-		this.$shade.appendTo(Garnish.$bod);
+		this.$shade.insertBefore(container);
 		this.$closeBtn = $('#cachewarmer-modal .close');
 		this.$progress = $('#cachewarmer-modal .progress');
 		this.$results = $('#cachewarmer-modal .results');
+		this.$resultsContainer = $('#cachewarmer-modal .results-container');
 		this.$progressNumber = $('#cachewarmer-modal .progressNumbers .current');
 		this.setContainer(container);
 		this.addListener(this.$closeBtn, 'click', 'hide');
-		this.addListener(this.$closeBtn, 'click', 'reset');
 		Garnish.Modal.instances.push(this);
 	},
 	getWidth: function() {
@@ -25,6 +26,11 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 	getHeight: function() {
 		return 200;
 	},
+	onFadeOut: function() {
+        this.trigger('fadeOut');
+        this.settings.onFadeOut();
+        this.reset();
+    },
 	updateProgress(current, max)
 	{
 		if (current > max) {
@@ -39,8 +45,9 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 		this.$progress.css('width', 0);
 		this.$progressNumber.html(0);
 		this.$results.html('');
+		this.$resultsContainer.hide();
 	},
-	showResults(results)
+	addResults(results)
 	{
 		let code;
 		for (let url of Object.keys(results)) {
@@ -52,20 +59,7 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 			}
 			this.$results.append(line);
 		}
+		this.$container.css('height', 'auto');
+		this.$resultsContainer.show();
 	}
-});
-
-$(document).ready(function(){
-	new Craft.CacheWarmer.Modal('#cachewarmer-modal', { autoShow: false });
-	let cachewarmer = new CacheWarmer(max_execution_time, total_urls, $('#cachewarmer-modal').data('modal'));
-	$('.warmthemup').click(function(){
-		$('#cachewarmer-modal').data('modal').show();
-		cachewarmer.lock().done(function(){
-			cachewarmer.run().done(function(results){
-				$('#cachewarmer-modal').data('modal').showResults(results);
-			});
-		}).fail(function(response){
-			Craft.cp.displayError(response.responseJSON.error);
-		});
-	});
 });
