@@ -8,74 +8,38 @@ use yii\console\ExitCode;
 
 class WarmController extends Controller
 {
-	const LOCK_FILE = '@root/storage/cache-warmer/lock';
-
 	/**
-	 * Crawl the site(s) to warm up caches
+	 * Crawl all sites to warm up caches
 	 * @return int
 	 */
 	public function actionIndex()
 	{
-		// if (!$this->canRun()) {
-		// 	$this->stdout(\Craft::t('site',"Lock file exists, aborting.") . "\n");
-		// 	return ExitCode::IOERR;
-		// }
-		$this->lock();
+		$service = CacheWarmer::$plugin->warmer;
+		if (!$service->canRun()) {
+			$this->stdout(\Craft::t('cachewarmer',"Cache warming process is already happening, aborting.") . PHP_EOL);
+			return ExitCode::IOERR;
+		}
+		$service->lock();
 		try {
-			$sites = CacheWarmer::$plugin->warmer->getCrawlableSites();
-			foreach ($sites as $site) {
-				$this->stdout(\Craft::t('site', "Crawling site {site} ...", ["site" => $site->name])."\n");
-				$urls = CacheWarmer::$plugin->warmer->getUrls($site);
+			$data = $service->getUrls();
+			$total = $service->getTotalUrls();
+			$safe = $service->setExecutionTime($total);
+			if (!$safe) {
+				$this->stdout(\Craft::t('cachewarmer', 'Warning : Your max execution time is {time} seconds, which might be too small to crawl {number} urls', ['time' => ini_get('max_execution_time'), 'number' => $total]));
+			}
+			$this->stdout(\Craft::t('cachewarmer', "Crawling {number} urls ...", ['number' => $total]) . PHP_EOL);
+			foreach ($data as $urls) {
+				foreach ($urls as $url) {
+					$code = $service->crawlOne($url);
+					$this->stdout(\Craft::t('cachewarmer', 'Crawled {url} : {code}', ["url" => $url, "code" => $code]) . PHP_EOL);
+				}
 			}
 		} catch (\Exception $e) {
-			$this->stderr('Error : '.$e->getMessage()."\n");
+			$this->stderr(\Craft::t('cachewarmer', 'Error : {error}', ['error' => $e->getMessage()]) . PHP_EOL);
+			$service->unlock();
+			return ExitCode::UNSPECIFIED_ERROR;
 		}
-		$this->unlock();
-		$this->stdout("Finished\n");
+		$service->unlock();
 		return ExitCode::OK;
-	}
-
-	/**
-	 * Can the schedule be run
-	 * 
-	 * @return bool
-	 */
-	protected function canRun(): bool
-	{
-		if (!$this->lockExists()) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Write the lock file so processes dont overlap
-	 */
-	protected function lock()
-	{
-		$file = \Craft::getAlias(self::LOCK_FILE);
-		$folder = dirname($file);
-		if (!is_dir($folder)) {
-			mkdir($folder, 0755, true);
-		}
-		file_put_contents($file, time());
-	}
-
-	/**
-	 * Delete the lock file
-	 */
-	protected function unlock()
-	{
-		unlink(\Craft::getAlias(self::LOCK_FILE));
-	}
-
-	/**
-	 * Does the lock file exist
-	 * 
-	 * @return boolean
-	 */
-	protected function lockExists()
-	{
-		return file_exists(\Craft::getAlias(self::LOCK_FILE));
 	}
 }

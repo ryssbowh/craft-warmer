@@ -2,52 +2,76 @@
 
 {% set errors = settings.getErrors() %}
 
-<div class="field sites">
-    <div class="heading">
-        <label>{{ 'Sites to warm up'|t('cachewarmer') }}</label>
-    </div>
-    {% for uid, name in sites %}
-        {{ forms.checkbox({
-            label: name,
-            name: 'sites[]',
-            value: uid,
-            checked: (uid in settings.sites)
-        }) }}
-    {% endfor %}
-</div>
+{{ forms.lightswitchField({
+    id: 'enable-front-url-field',
+    label: 'Enable front url'|t('cachewarmer'),
+    name: 'enableFrontUrl',
+    on: settings.enableFrontUrl
+}) }}
 
-{% for uid, name in sites %}
-    {{ forms.textField({
-        class: 'sitemap-'~uid,
-        label: 'Sitemap url for {site}'|t('cachewarmer', {site: name}),
-        name: 'sitemaps[' ~ uid ~ ']',
-        value: settings.getSitemap(uid)
-        }) 
-    }}
-{% endfor %}
-
-{{ forms.textareaField({
-    label: 'Urls to ignore'|t('cachewarmer'),
-    name: 'ignore',
-    value: settings.ignore,
-    errors: settings.getErrors('ignore'),
-    instructions: 'Enter urls or valid regex. One url per line.'|t('cachewarmer')
+{{ forms.textField({
+    id: 'front-url',
+    label: 'Front url'|t('cachewarmer'),
+    name: 'frontUrl',
+    value: settings.frontUrl,
+    instructions: 'Don\'t include site url, example : warm-cache'|t('cachewarmer'),
+    errors: settings.getErrors('frontUrl'),
     }) 
 }}
 
+<div class="sites">
+    {% for uid, name in sites %}
+        <h3>{{ name }}</h3>
+        {{ forms.lightswitch({
+            label: 'Enabled'|t('cachewarmer'),
+            name: 'sites[]',
+            value: uid,
+            class: 'site-enable',
+            on: (uid in settings.sites)
+        }) }}
+        {{ forms.textareaField({
+            label: 'Urls to ignore'|t('cachewarmer'),
+            name: 'ignore['~uid~']',
+            value: settings.getIgnore(uid),
+            instructions: 'Enter valid regex (/forums\\/*/) or paths (forums/article1), don\'t include site url, one per line.'|t('cachewarmer')
+            }) 
+        }}
+        {{ forms.textField({
+            label: 'Sitemap'|t('cachewarmer'),
+            name: 'sitemaps['~uid~']',
+            value: settings.getSitemap(uid),
+            instructions: 'Don\'t include site url'|t('cachewarmer'),
+            }) 
+        }}
+    {% endfor %}
+</div>
+
 {% js %}
-    function checkSitemapField(field) {
-        let sitemap = $('.sitemap-' + $(field).val()).parent().parent();
-        if ($(field).is(':checked')) {
-            sitemap.show();
+    function checkFrontUrl() {
+        let enable = $('#settings-enable-front-url-field input');
+        let url = $('#settings-front-url-field');
+        if (enable.val() == 1) {
+            url.show();
         } else {
-            sitemap.hide();
+            url.hide();
         }
     }
-    $.each($('.field.sites input'), function(){
-        checkSitemapField(this);
+    function checkIgnore(lightswitch) {
+        let ignore = lightswitch.parent().parent().next();
+        if (lightswitch.hasClass('on')) {
+            ignore.show();
+        } else {
+            ignore.hide();
+        }
+    }
+    checkFrontUrl();
+    $('#settings-enable-front-url-field').change(function(){
+        checkFrontUrl();
     });
-    $('.field.sites input').click(function(){
-        checkSitemapField(this);
+    $.each($('.sites .lightswitch'), function(){
+        checkIgnore($(this));
+    });
+    $('.sites .lightswitch').change(function(){
+        checkIgnore($(this));
     });
 {% endjs %}

@@ -21,6 +21,7 @@
     ],
     "require": {
         "craftcms/cms": "^3.5.0",
+        "vipnytt/sitemapparser": "^1.0",
         "ext-curl": "*"
     },
     "autoload": {
