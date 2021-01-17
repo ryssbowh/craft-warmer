@@ -1,10 +1,11 @@
 class CacheWarmer {
-	constructor(maxExecutionTime, totalUrls, urlLimit, processLimit, progresser)
+	constructor(maxExecutionTime, totalUrls, urlLimit, processLimit, progressBar, isAdmin)
 	{
-		this.progresser = progresser;
+		this.progressBar = progressBar;
 		this.urlLimit = false;
 		this.totalUrls = totalUrls;
 		this.processLimit = processLimit;
+		this.isAdmin = isAdmin;
 		if (!Number.isInteger(totalUrls)) {
 			throw 'Total urls must be an integer';
 		}
@@ -21,6 +22,14 @@ class CacheWarmer {
 		}
 	}
 
+	getUrl(url)
+	{
+		if (this.isAdmin) {
+			return Craft.getCpUrl(url);
+		}
+		return Craft.getSiteUrl(url);
+	}
+
 	reset()
 	{
 		this.callsRunning = 0;
@@ -34,24 +43,27 @@ class CacheWarmer {
 
 	lock()
 	{
+		let _this = this;
 		return $.ajax({
-			url: Craft.getCpUrl('cachewarmer/lock-if-can-run'),
+			url: _this.getUrl('cachewarmer/lock-if-can-run'),
 			dataType: 'json'
 		});
 	}
 
 	unlock()
 	{
+		let _this = this;
 		return $.ajax({
-			url: Craft.getCpUrl('cachewarmer/unlock'),
+			url: _this.getUrl('cachewarmer/unlock'),
 			dataType: 'json'
 		});
 	}
 
 	crawlBatch(data)
 	{
+		let _this = this;
 		return $.ajax({
-			url: Craft.getCpUrl('cachewarmer/crawl'),
+			url: _this.getUrl('cachewarmer/crawl'),
 			data: data
 		});
 	}
@@ -72,8 +84,8 @@ class CacheWarmer {
 				.done(function(data){
 					_this.urlsDone += _this.urlLimit;
 					_this.messages = {..._this.messages, ...data};
-					if (_this.progresser) {
-						_this.progresser.updateProgress(_this.urlsDone, _this.totalUrls);
+					if (_this.progressBar) {
+						_this.progressBar.updateProgress(_this.urlsDone, _this.totalUrls);
 					}
 					_this.updateRunningCalls();
 				}).fail(function(){
@@ -98,8 +110,8 @@ class CacheWarmer {
 		while (this.totalUrls > current) {
 			this.queue.push({limit: this.urlLimit, current: current});
 			current += this.urlLimit;
-			this.checkQueue();
 		}
+		this.checkQueue();
 	}
 
 	bindWindowClosing()

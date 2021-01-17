@@ -136,7 +136,17 @@ class CacheWarmerService extends Component
 	 */
 	public function canRun(): bool
 	{
-		return !file_exists($this->getLockFile());
+		return !$this->isLocked();
+	}
+
+	/**
+	 * Is the warmer locked
+	 * 
+	 * @return bool
+	 */
+	public function isLocked(): bool
+	{
+		return file_exists($this->getLockFile());
 	}
 
 	/**

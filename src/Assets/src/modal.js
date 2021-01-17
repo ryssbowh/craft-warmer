@@ -4,7 +4,7 @@ if (typeof Craft.CacheWarmer === typeof undefined) {
 
 Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 	$closeBtn: null,
-	$progress: null,
+	$progressBar: null,
 	$results: null,
 	$resultsContainer: null,
 	init: function(container, settings) {
@@ -12,7 +12,8 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 		this.$shade = $('<div class="' + this.settings.shadeClass + '"/>');
 		this.$shade.insertBefore(container);
 		this.$closeBtn = $('#cachewarmer-modal .close');
-		this.$progress = $('#cachewarmer-modal .progress');
+		this.$progressBar = new Craft.ProgressBar($('#cachewarmer-modal .progressBar'), true);
+		this.$progressBar.showProgressBar();
 		this.$results = $('#cachewarmer-modal .results');
 		this.$resultsContainer = $('#cachewarmer-modal .results-container');
 		this.$progressNumber = $('#cachewarmer-modal .progressNumbers .current');
@@ -36,13 +37,13 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 		if (current > max) {
 			current = max;
 		}
-		let percent = current/max * 100;
-		this.$progress.css('width', percent+'%');
 		this.$progressNumber.html(current);
+		let percent = current/max * 100;
+		this.$progressBar.setProgressPercentage(percent > 100 ? 100 : percent);
 	},
 	reset()
 	{
-		this.$progress.css('width', 0);
+		this.$progressBar.setProgressPercentage(0);
 		this.$progressNumber.html(0);
 		this.$results.html('');
 		this.$resultsContainer.hide();

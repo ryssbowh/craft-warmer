@@ -50,7 +50,7 @@ class Utility extends \craft\base\Utility
 			'max_execution_time' => ini_get('max_execution_time'),
 			'max_processes' => $settings->maxProcesses,
 			'max_urls' => $settings->maxUrls,
-			'locked' => !$service->canRun()
+			'locked' => $service->isLocked()
 		]);
 	}
 

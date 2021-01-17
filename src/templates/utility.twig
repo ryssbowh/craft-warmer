@@ -9,7 +9,7 @@
 	$(document).ready(function(){
 		new Craft.CacheWarmer.Modal('#cachewarmer-modal');
 		let modal = $('#cachewarmer-modal').data('modal');
-		let cachewarmer = new CacheWarmer(max_execution_time, total_urls, max_urls, max_processes, modal);
+		let cachewarmer = new CacheWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, true);
 		$('.warmthemup').click(function(){
 			modal.show();
 			cachewarmer.run().done(function(results){

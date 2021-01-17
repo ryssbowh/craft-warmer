@@ -62,6 +62,10 @@ class CacheWarmer extends Plugin
         if ($settings->enableFrontUrl) {
             Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
                 $event->rules[$settings->frontUrl] = 'cachewarmer/warm/front';
+                $event->rules[$settings->frontUrl.'/nojs'] = 'cachewarmer/warm/front-no-js';
+                $event->rules['cachewarmer/crawl'] = 'cachewarmer/warm/crawl';
+                $event->rules['cachewarmer/lock-if-can-run'] = 'cachewarmer/warm/lock-if-can-run';
+                $event->rules['cachewarmer/unlock'] = 'cachewarmer/warm/unlock';
             });
             Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
                 $event->roots['cachewarmer'] = __DIR__ . '/templates';
