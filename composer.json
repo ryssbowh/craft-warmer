@@ -1,6 +1,6 @@
 {
     "name": "ryssbowh/craft-warmer",
-    "description": "A simple cache warmer for Craft 3",
+    "description": "A cache warmer for Craft 3",
     "type": "craft-plugin",
     "keywords": [
         "craft",
