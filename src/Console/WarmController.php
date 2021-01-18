@@ -5,8 +5,8 @@ namespace Ryssbowh\CraftWarmer\Console;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Response;
 use Ryssbowh\CraftWarmer\CraftWarmer;
-use Ryssbowh\CraftWarmer\Services\Crawler;
-use Ryssbowh\Phpcraftwarmer\Observer;
+use Ryssbowh\PhpCacheWarmer\Observer;
+use Ryssbowh\PhpCacheWarmer\Warmer;
 use craft\console\Controller;
 use craft\helpers\Console;
 use yii\console\ExitCode;
@@ -32,7 +32,7 @@ class WarmController extends Controller implements Observer
 			$this->stdout(\Craft::t('craftwarmer', 'Warning : Your max execution time is {time} seconds, which might be too small to crawl {number} urls', ['time' => ini_get('max_execution_time'), 'number' => $total]) . PHP_EOL);
 		}
 		$this->stdout(\Craft::t('craftwarmer', "Crawling {number} urls ...", ['number' => $total]) . PHP_EOL);
-		$crawler = new Crawler($this);
+		$crawler = new Warmer($this);
 		$crawler->crawlAll($urls);
 		$service->unlock();
 		CraftWarmer::log('Console request : '.(memory_get_peak_usage()/1000000).' MB memory used');

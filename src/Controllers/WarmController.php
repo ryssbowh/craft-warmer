@@ -4,7 +4,7 @@ namespace Ryssbowh\CraftWarmer\Controllers;
 
 use Ryssbowh\CraftWarmer\Assets\FrontAsset;
 use Ryssbowh\CraftWarmer\CraftWarmer;
-use Ryssbowh\CraftWarmer\Exceptions\craftwarmerException;
+use Ryssbowh\CraftWarmer\Exceptions\CraftWarmerException;
 use craft\web\Controller;
 
 class WarmController extends Controller
@@ -85,7 +85,7 @@ class WarmController extends Controller
 			$service->lock();
 			return $this->asJson(['success' => true]);
 		}
-		throw craftwarmerException::locked();
+		throw CraftWarmerException::locked();
 	}
 
 	/**

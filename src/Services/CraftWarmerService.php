@@ -5,7 +5,7 @@ namespace Ryssbowh\CraftWarmer\Services;
 use Ryssbowh\CraftWarmer\CraftWarmer;
 use Ryssbowh\CraftWarmer\Exceptions\craftwarmerException;
 use Ryssbowh\CraftWarmer\Models\Settings;
-use Ryssbowh\Phpcraftwarmer\Warmer;
+use Ryssbowh\PhpCacheWarmer\Warmer;
 use craft\base\Component;
 use craft\models\Site;
 use vipnytt\SitemapParser;

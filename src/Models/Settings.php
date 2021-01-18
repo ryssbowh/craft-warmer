@@ -48,7 +48,7 @@ class Settings extends Model
      */
     public function getSitemap(string $uid): string
     {
-        return $this->sitemaps[$uid] ? ltrim($this->sitemaps[$uid], '/') : 'sitemap.xml';
+        return isset($this->sitemaps[$uid]) ? ltrim($this->sitemaps[$uid], '/') : 'sitemap.xml';
     }
 
     /**
