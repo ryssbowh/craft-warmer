@@ -1,19 +1,20 @@
 <?php 
 
-namespace Ryssbowh\CacheWarmer\Services;
+namespace Ryssbowh\CraftWarmer\Services;
 
-use Ryssbowh\CacheWarmer\CacheWarmer;
-use Ryssbowh\CacheWarmer\Exceptions\CacheWarmerException;
-use Ryssbowh\CacheWarmer\Models\Settings;
+use Ryssbowh\CraftWarmer\CraftWarmer;
+use Ryssbowh\CraftWarmer\Exceptions\craftwarmerException;
+use Ryssbowh\CraftWarmer\Models\Settings;
+use Ryssbowh\Phpcraftwarmer\Warmer;
 use craft\base\Component;
 use craft\models\Site;
 use vipnytt\SitemapParser;
 
-class CacheWarmerService extends Component
+class CraftWarmerService extends Component
 {
-	const LOCK_FILE = '@root/storage/cachewarmer/lock';
+	const LOCK_FILE = '@root/storage/craftwarmer/lock';
 
-	const CACHE_FILE = '@root/storage/cachewarmer/urls';
+	const CACHE_FILE = '@root/storage/craftwarmer/urls';
 
 	protected $urls;
 
@@ -78,21 +79,21 @@ class CacheWarmerService extends Component
 	 */
 	public function buildCache(): array
 	{
+		$warmer = new Warmer;
+		$urls = $warmer->parseSitemap('https://www.water-for-health.co.uk/sitemap/waterforhealth/sitemap.xml');
+		file_put_contents($this->getCacheFile(), json_encode(['hello' => $urls]));
+		return ['hello' => $urls];
+
 		$data = [];
 		$settings = $this->getSettings();
+		$warmer = new Warmer;
 		foreach ($settings->sites as $uid) {
 			$site = \Craft::$app->sites->getSiteByUid($uid);
 			if (!$url = $site->getBaseUrl()) {
 				continue;
 			}
-			$urls = [];
-			$parser = new SitemapParser();
 			$sitemap = $settings->getSitemap($uid);
-		    $parser->parseRecursive($url.$sitemap);
-		    foreach ($parser->getURLs() as $url => $tags) {
-		        $urls[] = $url;
-		    }
-		    $data[$site->id] = $this->ignoreUrls($urls, $site);
+		    $data[$site->id] = $this->ignoreUrls($warmer->parseSitemap($url.$sitemap), $site);
 		}
 		file_put_contents($this->getCacheFile(), json_encode($data));
 		return $data;
@@ -152,8 +153,8 @@ class CacheWarmerService extends Component
 	 */
 	public function lock()
 	{
-		CacheWarmer::log('locking cache warmer');
-		file_put_contents($this->getLockFile(), time());
+		CraftWarmer::log('locking cache warmer');
+		// file_put_contents($this->getLockFile(), time());
 		$this->buildCache();
 	}
 
@@ -162,24 +163,21 @@ class CacheWarmerService extends Component
 	 */
 	public function unlock()
 	{
-		CacheWarmer::log('unlocking cache warmer');
-		unlink($this->getLockFile());
+		if ($this->isLocked()) {
+			CraftWarmer::log('unlocking cache warmer');
+			unlink($this->getLockFile());
+		}
 	}
 
 	/**
 	 * Setting max execution time in case we suppose we don't have enough.
 	 * We'll suppose crawling one url takes 2 seconds.
 	 * 
-	 * @param int $totalUrls
-	 * @return bool is the execution time good enough
+	 * @return bool
 	 */
-	public function setExecutionTime(int $totalUrls): bool
+	public function setExecutionTime(): bool
 	{
-		$time = (int)ini_get('max_execution_time');
-		if ($time > 0 and $time < $totalUrls*2) {
-			return set_time_limit($totalUrls*2);
-		}
-		return true;
+		return set_time_limit(0);
 	}
 
 	/**
@@ -234,31 +232,12 @@ class CacheWarmerService extends Component
 	}
 
 	/**
-	 * Curl one url, return http code
-	 * 
-	 * @param  string $url
-	 * @return int
-	 */
-	protected function curl(string $url): int
-	{
-		$c = curl_init(); 
-		curl_setopt($c,CURLOPT_URL, $url);
-		curl_setopt($c,CURLOPT_RETURNTRANSFER,true);
-		curl_setopt($c,CURLOPT_HEADER, true); 
-		$result = curl_exec($c);
-		$code = curl_getinfo($c, CURLINFO_HTTP_CODE);
-		curl_close($c);
-		CacheWarmer::log('Curled '.$url.' : '.$code);
-		return $code;
-	}
-
-	/**
 	 * get plugin settings
 	 * 
 	 * @return Settings
 	 */
 	protected function getSettings(): Settings
 	{
-		return CacheWarmer::$plugin->getSettings();
+		return craftwarmer::$plugin->getSettings();
 	}
 }

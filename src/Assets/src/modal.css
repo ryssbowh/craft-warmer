@@ -1,29 +1,29 @@
-.cachewarmer-li {
+.craftwarmer-li {
 	list-style: disc;
 	margin-left: 15px;
 }
-#cachewarmer-modal .body {
+#craftwarmer-modal .body {
 	padding-bottom: 62px;
 }
-#cachewarmer-modal .progressBar{
+#craftwarmer-modal .progressBar{
 	width: 100%;
 }
-#cachewarmer-modal .progressbar{
+#craftwarmer-modal .progressbar{
 	position: static;
 	width: 100%;
 }
-#cachewarmer-modal .progressNumbers {
+#craftwarmer-modal .progressNumbers {
 	font-size: 16px;
 	margin-top: 10px;
 }
 
-#cachewarmer-modal .footer {
+#craftwarmer-modal .footer {
 	position: absolute;
 	bottom: 0;
 	width: 100%;
 }
 
-#cachewarmer-modal .results-container {
+#craftwarmer-modal .results-container {
 	max-height: 200px;
 	overflow-y: auto;
 }

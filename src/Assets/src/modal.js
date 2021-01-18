@@ -1,8 +1,8 @@
-if (typeof Craft.CacheWarmer === typeof undefined) {
-    Craft.CacheWarmer = {};
+if (typeof Craft.CraftWarmer === typeof undefined) {
+    Craft.CraftWarmer = {};
 }
 
-Craft.CacheWarmer.Modal = Garnish.Modal.extend({
+Craft.CraftWarmer.Modal = Garnish.Modal.extend({
 	$closeBtn: null,
 	$progressBar: null,
 	$results: null,
@@ -11,12 +11,12 @@ Craft.CacheWarmer.Modal = Garnish.Modal.extend({
 		this.setSettings(settings, Garnish.Modal.defaults);
 		this.$shade = $('<div class="' + this.settings.shadeClass + '"/>');
 		this.$shade.insertBefore(container);
-		this.$closeBtn = $('#cachewarmer-modal .close');
-		this.$progressBar = new Craft.ProgressBar($('#cachewarmer-modal .progressBar'), true);
+		this.$closeBtn = $('#craftwarmer-modal .close');
+		this.$progressBar = new Craft.ProgressBar($('#craftwarmer-modal .progressBar'), true);
 		this.$progressBar.showProgressBar();
-		this.$results = $('#cachewarmer-modal .results');
-		this.$resultsContainer = $('#cachewarmer-modal .results-container');
-		this.$progressNumber = $('#cachewarmer-modal .progressNumbers .current');
+		this.$results = $('#craftwarmer-modal .results');
+		this.$resultsContainer = $('#craftwarmer-modal .results-container');
+		this.$progressNumber = $('#craftwarmer-modal .progressNumbers .current');
 		this.setContainer(container);
 		this.addListener(this.$closeBtn, 'click', 'hide');
 		Garnish.Modal.instances.push(this);

@@ -2,32 +2,32 @@
 
 {% set errors = settings.getErrors() %}
 
-<h2>{{ 'Front url'|t('cachewarmer') }}</h2>
+<h2>{{ 'Front url'|t('craftwarmer') }}</h2>
 
 {{ forms.lightswitch({
     id: 'enable-front-url-field',
-    label: 'Enabled'|t('cachewarmer'),
+    label: 'Enabled'|t('craftwarmer'),
     name: 'enableFrontUrl',
     on: settings.enableFrontUrl
 }) }}
 
 {{ forms.textField({
     id: 'front-url',
-    label: 'Url'|t('cachewarmer'),
+    label: 'Url'|t('craftwarmer'),
     name: 'frontUrl',
     value: settings.frontUrl,
-    instructions: 'Don\'t include site url, example : warm-cache'|t('cachewarmer'),
+    instructions: 'Don\'t include site url, example : warm-cache'|t('craftwarmer'),
     errors: settings.getErrors('frontUrl'),
     size: 20
     }) 
 }}
 
 <div class="sites">
-    <h2>{{ 'Sites'|t('cachewarmer') }}</h2>
+    <h2>{{ 'Sites'|t('craftwarmer') }}</h2>
     {% for uid, name in sites %}
         <h3>{{ name }}</h3>
         {{ forms.lightswitch({
-            label: 'Enabled'|t('cachewarmer'),
+            label: 'Enabled'|t('craftwarmer'),
             name: 'sites[]',
             value: uid,
             class: 'site-enable',
@@ -35,19 +35,19 @@
         }) }}
         <div style="margin-top:20px">
             {{ forms.textareaField({
-                label: 'Urls to ignore'|t('cachewarmer'),
+                label: 'Urls to ignore'|t('craftwarmer'),
                 name: 'ignore['~uid~']',
                 value: settings.getIgnore(uid),
-                instructions: 'Enter one valid regex (/forums\\/*/) or path (forums/article1) per line, don\'t include site url.'|t('cachewarmer'),
+                instructions: 'Enter one valid regex (/forums\\/*/) or path (forums/article1) per line, don\'t include site url.'|t('craftwarmer'),
                 cols: 50,
                 rows: 5
                 }) 
             }}
             {{ forms.textField({
-                label: 'Sitemap'|t('cachewarmer'),
+                label: 'Sitemap'|t('craftwarmer'),
                 name: 'sitemaps['~uid~']',
                 value: settings.getSitemap(uid),
-                instructions: 'Don\'t include site url'|t('cachewarmer'),
+                instructions: 'Don\'t include site url'|t('craftwarmer'),
                 size: 20
                 }) 
             }}
@@ -55,14 +55,14 @@
     {% endfor %}
 </div>
 
-<h2>{{ 'Advanced'|t('cachewarmer') }}</h2>
+<h2>{{ 'Advanced'|t('craftwarmer') }}</h2>
 
 <p><i>{{ 'Those settings don\'t apply to the command line.' }}</i></p>
 
 {{ forms.textField({
     type: 'number',
-    label: 'Max number of processes'|t('cachewarmer'),
-    instructions: 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.'|t('cachewarmer'),
+    label: 'Max number of processes'|t('craftwarmer'),
+    instructions: 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.'|t('craftwarmer'),
     name: 'maxProcesses',
     value: settings.maxProcesses,
     errors: settings.getErrors('maxProcesses'),
@@ -74,8 +74,8 @@
 
 {{ forms.textField({
     type: 'number',
-    label: 'Max number of urls'|t('cachewarmer'),
-    instructions: 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.'|t('cachewarmer'),
+    label: 'Max number of urls'|t('craftwarmer'),
+    instructions: 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.'|t('craftwarmer'),
     name: 'maxUrls',
     value: settings.maxUrls,
     errors: settings.getErrors('maxUrls'),

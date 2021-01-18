@@ -8,7 +8,7 @@ Some urls can be ignored in the backend's settings, for each site.
 
 There are several ways to trigger it :
 - With the utility control panel menu
-- Console command : `php craft cachewarmer/warm`
+- Console command : `php craft craftwarmer/warm`
 - Through a front end url that you can enable in the settings :
 	- visit that url with a browser
 	- or use curl : the url will have to be suffixed by 'nojs', so if you define a front url 'warm', you'll need to curl `http://mysite.com/warm/nojs`
@@ -27,8 +27,6 @@ Activate site(s) in the settings.
 
 ##Requirements
 
-- php-curl extension.
-- php 7
 - Craft 3.5
 
 

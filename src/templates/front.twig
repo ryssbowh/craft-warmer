@@ -2,14 +2,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="{{ craft.app.language }}">
 <head>
     {{ head() }}
-    <title>{{ currentSite.name }} | {{ 'Cache Warmer'|t('cachewarmer') }}</title>
+    <title>{{ currentSite.name }} | {{ 'Cache Warmer'|t('craftwarmer') }}</title>
 </head>
 <body>
     {{ beginBody() }}
 
     <div id="notifications"></div>
 
-    {% include "cachewarmer/cache-warmer" %}
+    {% include "craftwarmer/cache-warmer" %}
 
 	{{ endBody() }}
 </body>
@@ -21,9 +21,9 @@
 	var max_urls = {% if max_urls %}{{ max_urls }}{% else %}''{% endif %};
 	var max_processes = {{ max_processes }};
 
-	function warm(modal, cachewarmer) {
+	function warm(modal, craftwarmer) {
 		modal.show();
-		cachewarmer.run().done(function(results){
+		craftwarmer.run().done(function(results){
 			modal.addResults(results);
 		}).fail(function(response){
 			modal.hide();
@@ -33,18 +33,18 @@
 	}
 
 	$(document).ready(function(){
-		new Craft.CacheWarmer.Modal('#cachewarmer-modal');
-		let modal = $('#cachewarmer-modal').data('modal');
-		let cachewarmer = new CacheWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, false);
+		new Craft.CraftWarmer.Modal('#craftwarmer-modal');
+		let modal = $('#craftwarmer-modal').data('modal');
+		let craftwarmer = new CraftWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, false);
 		$('.warmthemup').click(function(){
-			warm(modal, cachewarmer);
+			warm(modal, craftwarmer);
 		});
 		$('.break-lock button').click(function(){
-			cachewarmer.unlock().done(function(data){
+			craftwarmer.unlock().done(function(data){
 				Craft.cp.displayNotice(data.message);
 				$('.break-lock').fadeOut('fast');
 			});
 		});
-		warm(modal, cachewarmer);
+		warm(modal, craftwarmer);
 	});
 {% endjs %}

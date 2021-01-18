@@ -1,6 +1,6 @@
 <?php
 
-namespace Ryssbowh\CacheWarmer\Assets;
+namespace Ryssbowh\CraftWarmer\Assets;
 
 use Craft;
 use craft\web\AssetBundle;

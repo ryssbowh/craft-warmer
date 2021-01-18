@@ -21,19 +21,18 @@
     ],
     "require": {
         "craftcms/cms": "^3.5.0",
-        "vipnytt/sitemapparser": "^1.0",
-        "putyourlightson/craft-log-to-file": "^1.2",
-        "ext-curl": "*"
+        "ryssbowh/php-cache-warmer": "dev:master",
+        "putyourlightson/craft-log-to-file": "^1.2"
     },
     "autoload": {
         "psr-4": {
-          "Ryssbowh\\CacheWarmer\\": "src/"
+          "Ryssbowh\\CraftWarmer\\": "src/"
         }
     },
     "extra": {
         "name": "Cache Warmer",
-        "handle": "cachewarmer",
-        "class": "Ryssbowh\\CacheWarmer\\CacheWarmer"
+        "handle": "craftwarmer",
+        "class": "Ryssbowh\\CraftWarmer\\CraftWarmer"
     },
 	"minimum-stability": "stable"
 }

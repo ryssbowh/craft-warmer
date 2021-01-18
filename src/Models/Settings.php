@@ -1,6 +1,6 @@
 <?php
 
-namespace Ryssbowh\CacheWarmer\Models;
+namespace Ryssbowh\CraftWarmer\Models;
 
 use Craft;
 use craft\base\Model;

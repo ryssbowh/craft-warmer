@@ -1,4 +1,4 @@
-class CacheWarmer {
+class CraftWarmer {
 	constructor(maxExecutionTime, totalUrls, urlLimit, processLimit, progressBar, isAdmin)
 	{
 		this.progressBar = progressBar;
@@ -45,7 +45,7 @@ class CacheWarmer {
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('cachewarmer/lock-if-can-run'),
+			url: _this.getUrl('craftwarmer/lock-if-can-run'),
 			dataType: 'json'
 		});
 	}
@@ -54,7 +54,7 @@ class CacheWarmer {
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('cachewarmer/unlock'),
+			url: _this.getUrl('craftwarmer/unlock'),
 			dataType: 'json'
 		});
 	}
@@ -63,7 +63,7 @@ class CacheWarmer {
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('cachewarmer/crawl'),
+			url: _this.getUrl('craftwarmer/crawl'),
 			data: data
 		});
 	}
@@ -141,4 +141,4 @@ class CacheWarmer {
 	}
 }
 
-window.CacheWarmer = CacheWarmer;
+window.CraftWarmer = CraftWarmer;

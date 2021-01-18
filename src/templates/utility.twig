@@ -1,4 +1,4 @@
-{% include "cachewarmer/cache-warmer" %}
+{% include "craftwarmer/craft-warmer" %}
 
 {% js %}
 	var max_execution_time = {{ max_execution_time }};
@@ -7,12 +7,12 @@
 	var max_processes = {{ max_processes }};
 
 	$(document).ready(function(){
-		new Craft.CacheWarmer.Modal('#cachewarmer-modal');
-		let modal = $('#cachewarmer-modal').data('modal');
-		let cachewarmer = new CacheWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, true);
+		new Craft.CraftWarmer.Modal('#craftwarmer-modal');
+		let modal = $('#craftwarmer-modal').data('modal');
+		let craftwarmer = new CraftWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, true);
 		$('.warmthemup').click(function(){
 			modal.show();
-			cachewarmer.run().done(function(results){
+			craftwarmer.run().done(function(results){
 				modal.addResults(results);
 			}).fail(function(response){
 				modal.hide();
@@ -21,7 +21,7 @@
 			});
 		});
 		$('.break-lock button').click(function(){
-			cachewarmer.unlock().done(function(data){
+			craftwarmer.unlock().done(function(data){
 				Craft.cp.displayNotice(data.message);
 				$('.break-lock').fadeOut('fast');
 			});

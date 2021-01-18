@@ -1,10 +1,10 @@
 <?php
 
-namespace Ryssbowh\CacheWarmer;
+namespace Ryssbowh\CraftWarmer;
 
 use Craft;
 use GitWrapper\Exception\GitException;
-use Ryssbowh\CacheWarmer\Assets\WarmerAsset;
+use Ryssbowh\CraftWarmer\Assets\WarmerAsset;
 use Ryssbowh\Git\Assets\GitAsset;
 
 class Utility extends \craft\base\Utility
@@ -14,7 +14,7 @@ class Utility extends \craft\base\Utility
 	 */
 	public static function displayName (): string
 	{
-		return Craft::t('cachewarmer', 'Cache Warmer');
+		return Craft::t('craftwarmer', 'Cache Warmer');
 	}
 
 	/**
@@ -22,7 +22,7 @@ class Utility extends \craft\base\Utility
 	 */
 	public static function id(): string
 	{
-		return 'cachewarmer';
+		return 'craftwarmer';
 	}
 
 	/**
@@ -30,7 +30,7 @@ class Utility extends \craft\base\Utility
 	 */
 	public static function iconPath ()
 	{
-		return Craft::getAlias('@Ryssbowh/CacheWarmer/icon_utility.svg');
+		return Craft::getAlias('@Ryssbowh/CraftWarmer/icon_utility.svg');
 	}
 
 	/**
@@ -40,10 +40,10 @@ class Utility extends \craft\base\Utility
 	{
 		\Craft::$app->view->registerAssetBundle(WarmerAsset::class);
 
-		$settings = CacheWarmer::$plugin->getSettings();
-		$service = CacheWarmer::$plugin->warmer;
+		$settings = CraftWarmer::$plugin->getSettings();
+		$service = CraftWarmer::$plugin->warmer;
 
-		return Craft::$app->view->renderTemplate('cachewarmer/utility', [
+		return Craft::$app->view->renderTemplate('craftwarmer/utility', [
 			'sites' => $service->getCrawlableSites(),
 			'urls' => $service->getUrls(),
 			'total_urls' => $service->getTotalUrls(),

@@ -1,10 +1,10 @@
 <?php
 
-namespace Ryssbowh\CacheWarmer;
+namespace Ryssbowh\CraftWarmer;
 
-use Ryssbowh\CacheWarmer\Models\Settings;
-use Ryssbowh\CacheWarmer\Services\CacheWarmerService;
-use Ryssbowh\CacheWarmer\Utility;
+use Ryssbowh\CraftWarmer\Models\Settings;
+use Ryssbowh\CraftWarmer\Services\CraftWarmerService;
+use Ryssbowh\CraftWarmer\Utility;
 use craft\base\Plugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterTemplateRootsEvent;
@@ -16,13 +16,13 @@ use putyourlightson\logtofile\LogToFile;
 use yii\base\Event;
 use yii\web\Response;
 
-class CacheWarmer extends Plugin
+class CraftWarmer extends Plugin
 {
     public static $plugin;
 
     public $hasCpSettings = true;
 
-    public $controllerNamespace = 'Ryssbowh\\CacheWarmer\\Controllers';
+    public $controllerNamespace = 'Ryssbowh\\CraftWarmer\\Controllers';
 
     public function init()
     {
@@ -31,11 +31,11 @@ class CacheWarmer extends Plugin
         self::$plugin = $this;
 
         $this->setComponents([
-            'warmer' => CacheWarmerService::class
+            'warmer' => CraftWarmerService::class
         ]);
 
         if (\Craft::$app->getRequest()->getIsConsoleRequest()) {
-            $this->controllerNamespace = 'Ryssbowh\\CacheWarmer\\Console';
+            $this->controllerNamespace = 'Ryssbowh\\CraftWarmer\\Console';
         }
 
         Event::on(
@@ -47,26 +47,22 @@ class CacheWarmer extends Plugin
         );
 
         Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-            $event->rules['cachewarmer/crawl'] = 'cachewarmer/warm/crawl';
-            $event->rules['cachewarmer/lock-if-can-run'] = 'cachewarmer/warm/lock-if-can-run';
-            $event->rules['cachewarmer/unlock'] = 'cachewarmer/warm/unlock';
-        });
-
-        Event::on(Response::class, Response::EVENT_AFTER_SEND, function() {
-            CacheWarmer::log(\Craft::$app->request->url.' : '.(memory_get_peak_usage()/1000000).' MB memory used');
+            $event->rules['craftwarmer/crawl'] = 'craftwarmer/warm/crawl';
+            $event->rules['craftwarmer/lock-if-can-run'] = 'craftwarmer/warm/lock-if-can-run';
+            $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
         });
 
         $settings = $this->getSettings();
         if ($settings->enableFrontUrl) {
             Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
-                $event->rules[$settings->frontUrl] = 'cachewarmer/warm/front';
-                $event->rules[$settings->frontUrl.'/nojs'] = 'cachewarmer/warm/front-no-js';
-                $event->rules['cachewarmer/crawl'] = 'cachewarmer/warm/crawl';
-                $event->rules['cachewarmer/lock-if-can-run'] = 'cachewarmer/warm/lock-if-can-run';
-                $event->rules['cachewarmer/unlock'] = 'cachewarmer/warm/unlock';
+                $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
+                $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
+                $event->rules['craftwarmer/crawl'] = 'craftwarmer/warm/crawl';
+                $event->rules['craftwarmer/lock-if-can-run'] = 'craftwarmer/warm/lock-if-can-run';
+                $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
             });
             Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
-                $event->roots['cachewarmer'] = __DIR__ . '/templates';
+                $event->roots['craftwarmer'] = __DIR__ . '/templates';
             });
         }
     }
@@ -79,7 +75,7 @@ class CacheWarmer extends Plugin
      */
     public static function log($message, $type = 'log')
     {
-        LogToFile::$type($message, 'cachewarmer');
+        LogToFile::$type($message, 'craftwarmer');
     }
 
     /**
@@ -106,7 +102,7 @@ class CacheWarmer extends Plugin
     	}
     	// dd($sites);
         return \Craft::$app->view->renderTemplate(
-            'cachewarmer/settings',
+            'craftwarmer/settings',
             [
                 'settings' => $this->getSettings(),
                 'sites' => $sites
