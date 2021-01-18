@@ -49,23 +49,11 @@ class WarmController extends Controller
 	{
 		$service = CacheWarmer::$plugin->warmer;
 		if ($service->isLocked()) {
-			$sercice->unlock();
+			$service->unlock();
 			$this->stdout(\Craft::t('cachewarmer', 'The lock has been removed') . PHP_EOL);
 		} else {
 			$this->stdout(\Craft::t('cachewarmer', 'The warmer is not locked') . PHP_EOL);
 		}
-		return ExitCode::OK;
-	}
-
-	/**
-	 * Rebuilds the cached url list
-	 * @return int
-	 */
-	public function actionRebuildUrls()
-	{
-		CacheWarmer::$plugin->warmer->buildCache();
-		$total = CacheWarmer::$plugin->warmer->getTotalUrls();
-		$this->stdout(\Craft::t('cachewarmer', 'Urls have been rebuilt, {total} found', ['total' => $total]) . PHP_EOL);
 		return ExitCode::OK;
 	}
 }

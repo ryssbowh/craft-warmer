@@ -95,6 +95,7 @@ class WarmController extends Controller
 	{
 		$service = CacheWarmer::$plugin->warmer;
 		if ($service->isLocked()) {
+			$service->unlock();
 			$message = \Craft::t('cachewarmer', 'The lock has been removed');
 		} else {
 			$message = \Craft::t('cachewarmer', 'The warmer is not locked');

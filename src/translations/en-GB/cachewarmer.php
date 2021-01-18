@@ -34,6 +34,5 @@ return [
 	'Max number of processes' => 'Max number of processes',
 	'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.' => 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.',
 	'Max number of urls' => 'Max number of urls',
-	'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.' => 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.',
-	'Urls have been rebuilt, {total} found' => 'Urls have been rebuilt, {total} found'
+	'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.' => 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.'
 ];

@@ -15,6 +15,8 @@ class CacheWarmerService extends Component
 
 	const CACHE_FILE = '@root/storage/cachewarmer/urls';
 
+	protected $urls;
+
 	public function init()
 	{
 		$file = $this->getLockFile();
@@ -47,9 +49,6 @@ class CacheWarmerService extends Component
 	public function getUrls($flat = false): array
 	{
 		$data = $this->getCache();
-		if ($data === null) {
-			$data = $this->buildCache();
-		}
 		if ($flat) {
 			$data2 = [];
 			array_walk($data, function($array) use (&$data2){
@@ -104,13 +103,17 @@ class CacheWarmerService extends Component
 	 * 
 	 * @return array
 	 */
-	protected function getCache(): ?array
+	protected function getCache(): array
 	{
-		$file = $this->getCacheFile();
-		if (!file_exists($file)) {
-			return null;
+		if ($this->urls === null) {
+			$file = $this->getCacheFile();
+			if (!file_exists($file)) {
+				$this->urls = [];
+			} else {
+				$this->urls = json_decode(file_get_contents($file), true);
+			}
 		}
-		return json_decode(file_get_contents($file), true);
+		return $this->urls;
 	}
 
 	/**
@@ -145,11 +148,12 @@ class CacheWarmerService extends Component
 	}
 
 	/**
-	 * Write the lock file so processes dont overlap
+	 * Write the lock file so processes dont overlap and builds the urls in cache
 	 */
 	public function lock()
 	{
 		file_put_contents($this->getLockFile(), time());
+		$this->buildCache();
 	}
 
 	/**
