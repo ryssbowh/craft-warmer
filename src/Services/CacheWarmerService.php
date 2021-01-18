@@ -152,6 +152,7 @@ class CacheWarmerService extends Component
 	 */
 	public function lock()
 	{
+		CacheWarmer::log('locking cache warmer');
 		file_put_contents($this->getLockFile(), time());
 		$this->buildCache();
 	}
@@ -161,6 +162,7 @@ class CacheWarmerService extends Component
 	 */
 	public function unlock()
 	{
+		CacheWarmer::log('unlocking cache warmer');
 		unlink($this->getLockFile());
 	}
 
@@ -246,6 +248,7 @@ class CacheWarmerService extends Component
 		$result = curl_exec($c);
 		$code = curl_getinfo($c, CURLINFO_HTTP_CODE);
 		curl_close($c);
+		CacheWarmer::log('Curled '.$url.' : '.$code);
 		return $code;
 	}
 

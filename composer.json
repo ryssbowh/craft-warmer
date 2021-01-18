@@ -22,6 +22,7 @@
     "require": {
         "craftcms/cms": "^3.5.0",
         "vipnytt/sitemapparser": "^1.0",
+        "putyourlightson/craft-log-to-file": "^1.2",
         "ext-curl": "*"
     },
     "autoload": {

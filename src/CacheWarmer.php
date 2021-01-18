@@ -12,7 +12,9 @@ use craft\events\RegisterUrlRulesEvent;
 use craft\services\Utilities;
 use craft\web\UrlManager;
 use craft\web\View;
+use putyourlightson\logtofile\LogToFile;
 use yii\base\Event;
+use yii\web\Response;
 
 class CacheWarmer extends Plugin
 {
@@ -44,18 +46,14 @@ class CacheWarmer extends Plugin
             }
         );
 
-        Event::on(
-            CacheWarmer::class,
-            CacheWarmer::EVENT_AFTER_SAVE_SETTINGS,
-            function () {
-                CacheWarmer::$plugin->warmer->buildCache();
-            }
-        );
-
         Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
             $event->rules['cachewarmer/crawl'] = 'cachewarmer/warm/crawl';
             $event->rules['cachewarmer/lock-if-can-run'] = 'cachewarmer/warm/lock-if-can-run';
             $event->rules['cachewarmer/unlock'] = 'cachewarmer/warm/unlock';
+        });
+
+        Event::on(Response::class, Response::EVENT_AFTER_SEND, function() {
+            CacheWarmer::log(\Craft::$app->request->url.' : '.(memory_get_peak_usage()/1000000).' MB memory used');
         });
 
         $settings = $this->getSettings();
@@ -71,6 +69,17 @@ class CacheWarmer extends Plugin
                 $event->roots['cachewarmer'] = __DIR__ . '/templates';
             });
         }
+    }
+
+    /**
+     * Log on a separate file
+     * 
+     * @param  $message
+     * @param  string $type
+     */
+    public static function log($message, $type = 'log')
+    {
+        LogToFile::$type($message, 'cachewarmer');
     }
 
     /**
