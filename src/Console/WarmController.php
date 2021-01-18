@@ -56,4 +56,16 @@ class WarmController extends Controller
 		}
 		return ExitCode::OK;
 	}
+
+	/**
+	 * Rebuilds the cached url list
+	 * @return int
+	 */
+	public function actionRebuildUrls()
+	{
+		CacheWarmer::$plugin->warmer->buildCache();
+		$total = CacheWarmer::$plugin->warmer->getTotalUrls();
+		$this->stdout(\Craft::t('cachewarmer', 'Urls have been rebuilt, {total} found', ['total' => $total]) . PHP_EOL);
+		return ExitCode::OK;
+	}
 }

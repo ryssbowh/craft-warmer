@@ -67,12 +67,7 @@ class CacheWarmerService extends Component
 	 */
 	public function getTotalUrls(): int
 	{
-		$urls = $this->getUrls();
-		$total = 0;
-		foreach ($urls as $array) {
-			$total += sizeof($array);
-		}
-		return $total;
+		return sizeof($this->getUrls(true));
 	}
 
 	/**
