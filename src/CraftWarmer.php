@@ -47,8 +47,8 @@ class CraftWarmer extends Plugin
         );
 
         Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-            $event->rules['craftwarmer/crawl'] = 'craftwarmer/warm/crawl';
-            $event->rules['craftwarmer/lock-if-can-run'] = 'craftwarmer/warm/lock-if-can-run';
+            $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch';
+            $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate';
             $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
         });
 
@@ -57,8 +57,8 @@ class CraftWarmer extends Plugin
             Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
                 $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
                 $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
-                $event->rules['craftwarmer/crawl'] = 'craftwarmer/warm/crawl';
-                $event->rules['craftwarmer/lock-if-can-run'] = 'craftwarmer/warm/lock-if-can-run';
+                $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch-front';
+                $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate-front';
                 $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
             });
             Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
@@ -75,7 +75,8 @@ class CraftWarmer extends Plugin
      */
     public static function log($message, $type = 'log')
     {
-        LogToFile::$type($message, 'craftwarmer');
+        $requestType = self::$plugin->warmer->getRequestType();
+        LogToFile::$type($requestType.': '.$message, 'craftwarmer');
     }
 
     /**

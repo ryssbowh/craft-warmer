@@ -14,15 +14,19 @@ class FrontAsset extends AssetBundle
     public function init()
     {
         // define the path that your publishable resources live
-        $this->sourcePath = __DIR__ . "/src";
+        $this->sourcePath = __DIR__ . "/dist";
 
         $this->css = [
             'front.css',
+            'modal.css',
+        ];
+
+        $this->js = [
+            'front.js',
         ];
 
         $this->depends = [
-            CpAsset::class,
-            WarmerAsset::class,
+            CpAsset::class
         ];
 
         parent::init();

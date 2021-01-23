@@ -1,30 +1,12 @@
 {% include "craftwarmer/craft-warmer" %}
 
 {% js %}
-	var max_execution_time = {{ max_execution_time }};
-	var total_urls = {{ total_urls }};
-	var max_urls = {% if max_urls %}{{ max_urls }}{% else %}''{% endif %};
-	var max_processes = {{ max_processes }};
-
-	$(document).ready(function(){
-		new Craft.CraftWarmer.Modal('#craftwarmer-modal');
-		let modal = $('#craftwarmer-modal').data('modal');
-		let craftwarmer = new CraftWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, true);
-		$('.warmthemup').click(function(){
-			modal.show();
-			craftwarmer.run().done(function(results){
-				modal.addResults(results);
-			}).fail(function(response){
-				modal.hide();
-				Craft.cp.displayError(response.responseJSON.error);
-				$('.break-lock').fadeIn('fast');
-			});
-		});
-		$('.break-lock button').click(function(){
-			craftwarmer.unlock().done(function(data){
-				Craft.cp.displayNotice(data.message);
-				$('.break-lock').fadeOut('fast');
-			});
-		});
-	});
+var warmer_settings = {
+	totalUrls: {{ totalUrls }}, 
+	urlLimit: {{ urlLimit }},
+	processLimit: {{ processLimit }},
+	isAdmin: true,
+	secret: false,
+	disableLocking: {{ disableLocking ? 'true' : 'false' }}
+};
 {% endjs %}

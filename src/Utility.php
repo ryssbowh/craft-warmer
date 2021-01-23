@@ -4,7 +4,7 @@ namespace Ryssbowh\CraftWarmer;
 
 use Craft;
 use GitWrapper\Exception\GitException;
-use Ryssbowh\CraftWarmer\Assets\WarmerAsset;
+use Ryssbowh\CraftWarmer\Assets\UtilityAsset;
 use Ryssbowh\Git\Assets\GitAsset;
 
 class Utility extends \craft\base\Utility
@@ -38,19 +38,21 @@ class Utility extends \craft\base\Utility
 	 */
 	public static function contentHtml (): string
 	{
-		\Craft::$app->view->registerAssetBundle(WarmerAsset::class);
+		\Craft::$app->view->registerAssetBundle(UtilityAsset::class);
 
 		$settings = CraftWarmer::$plugin->getSettings();
 		$service = CraftWarmer::$plugin->warmer;
 
 		return Craft::$app->view->renderTemplate('craftwarmer/utility', [
 			'sites' => $service->getCrawlableSites(),
-			'urls' => $service->getUrls(),
-			'total_urls' => $service->getTotalUrls(),
-			'max_execution_time' => ini_get('max_execution_time'),
-			'max_processes' => $settings->maxProcesses,
-			'max_urls' => $settings->maxUrls,
-			'locked' => $service->isLocked()
+			'urls' => $service->getUrls(false, true),
+			'totalUrls' => $service->getTotalUrls(),
+			'processLimit' => $settings->maxProcesses,
+			'urlLimit' => $settings->maxUrls,
+			'disableLocking' => $settings->disableLocking,
+			'locked' => $service->isLocked(),
+			'logs' => $service->getLastRunLogs(),
+			'logDate' => $service->getLastRunDate()
 		]);
 	}
 

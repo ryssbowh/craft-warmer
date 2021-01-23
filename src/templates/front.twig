@@ -9,42 +9,19 @@
 
     <div id="notifications"></div>
 
-    {% include "craftwarmer/cache-warmer" %}
+    {% include "craftwarmer/craft-warmer" %}
 
 	{{ endBody() }}
 </body>
 </html>
 
 {% js %}
-	var max_execution_time = {{ max_execution_time }};
-	var total_urls = {{ total_urls }};
-	var max_urls = {% if max_urls %}{{ max_urls }}{% else %}''{% endif %};
-	var max_processes = {{ max_processes }};
-
-	function warm(modal, craftwarmer) {
-		modal.show();
-		craftwarmer.run().done(function(results){
-			modal.addResults(results);
-		}).fail(function(response){
-			modal.hide();
-			Craft.cp.displayError(response.responseJSON.error);
-			$('.break-lock').fadeIn('fast');
-		});
-	}
-
-	$(document).ready(function(){
-		new Craft.CraftWarmer.Modal('#craftwarmer-modal');
-		let modal = $('#craftwarmer-modal').data('modal');
-		let craftwarmer = new CraftWarmer(max_execution_time, total_urls, max_urls, max_processes, modal, false);
-		$('.warmthemup').click(function(){
-			warm(modal, craftwarmer);
-		});
-		$('.break-lock button').click(function(){
-			craftwarmer.unlock().done(function(data){
-				Craft.cp.displayNotice(data.message);
-				$('.break-lock').fadeOut('fast');
-			});
-		});
-		warm(modal, craftwarmer);
-	});
+var warmer_settings = {
+	totalUrls: {{ totalUrls }}, 
+	urlLimit: {{ urlLimit }},
+	processLimit: {{ processLimit }},
+	isAdmin: false,
+	secret: '{{ secret }}',
+	disableLocking: {{ disableLocking ? 'true' : 'false' }}
+};
 {% endjs %}

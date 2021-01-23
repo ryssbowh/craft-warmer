@@ -3,8 +3,9 @@
 namespace Ryssbowh\CraftWarmer\Services;
 
 use Ryssbowh\CraftWarmer\CraftWarmer;
-use Ryssbowh\CraftWarmer\Exceptions\craftwarmerException;
+use Ryssbowh\CraftWarmer\Exceptions\CraftWarmerException;
 use Ryssbowh\CraftWarmer\Models\Settings;
+use Ryssbowh\CraftWarmer\Observers\GuzzleObserver;
 use Ryssbowh\PhpCacheWarmer\Warmer;
 use craft\base\Component;
 use craft\models\Site;
@@ -14,9 +15,19 @@ class CraftWarmerService extends Component
 {
 	const LOCK_FILE = '@root/storage/craftwarmer/lock';
 
-	const CACHE_FILE = '@root/storage/craftwarmer/urls';
+	const LOG_FILE = '@root/storage/craftwarmer/log';
 
-	protected $urls;
+	const EVENT_WARMED_ALL = 'craftwarmer.warmed_all';
+
+	const EVENT_WARMED_BATCH = 'craftwarmer.warmed_batch';
+
+	const URLS_CACHE_KEY = 'craftwarmer.urls';
+
+	/**
+	 * Type of current request 
+	 * @var string nojs, ajax or console
+	 */
+	protected $requestType = '';
 
 	public function init()
 	{
@@ -25,6 +36,24 @@ class CraftWarmerService extends Component
 		if (!is_dir($folder)) {
 			mkdir($folder, 0755, true);
 		}
+	}
+
+	/**
+	 * Get request type
+	 * 
+	 * @return string
+	 */
+	public function getRequestType(): string
+	{
+		return $this->requestType;
+	}
+
+	/**
+	 * Set request type
+	 */
+	public function setRequestType(string $type)
+	{
+		$this->requestType = $type;
 	}
 
 	/**
@@ -47,9 +76,13 @@ class CraftWarmerService extends Component
 	 * @param  $flat do we want a flat array
 	 * @return array
 	 */
-	public function getUrls($flat = false): array
+	public function getUrls(bool $flat = false, bool $forceCacheRebuild = false): array
 	{
-		$data = $this->getCache();
+		if ($forceCacheRebuild) {
+			$data = $this->buildCache();
+		} else {
+			$data = $this->getCache();
+		}
 		if ($flat) {
 			$data2 = [];
 			array_walk($data, function($array) use (&$data2){
@@ -72,30 +105,25 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Calculate urls to crawl, and cache them.
-	 * Cache will be a file in storage, not the Craft cache, this tool is
-	 * intended to be used when cache are cleared, using Craft cache doesn't make sense
 	 * 
 	 * @return array
 	 */
 	public function buildCache(): array
 	{
-		$warmer = new Warmer;
-		$urls = $warmer->parseSitemap('https://www.water-for-health.co.uk/sitemap/waterforhealth/sitemap.xml');
-		file_put_contents($this->getCacheFile(), json_encode(['hello' => $urls]));
-		return ['hello' => $urls];
-
-		$data = [];
 		$settings = $this->getSettings();
-		$warmer = new Warmer;
+		$userAgent = ($settings->userAgent ? $settings->userAgent : SitemapParser::DEFAULT_USER_AGENT);
+		$parser = new SitemapParser($userAgent);
+		$data = [];
 		foreach ($settings->sites as $uid) {
 			$site = \Craft::$app->sites->getSiteByUid($uid);
 			if (!$url = $site->getBaseUrl()) {
 				continue;
 			}
 			$sitemap = $settings->getSitemap($uid);
-		    $data[$site->id] = $this->ignoreUrls($warmer->parseSitemap($url.$sitemap), $site);
+			$parser->parseRecursive($url.$sitemap);
+		    $data[$site->id] = $this->ignoreUrls(array_keys($parser->getUrls()), $site);
 		}
-		file_put_contents($this->getCacheFile(), json_encode($data));
+		\Craft::$app->cache->set(self::URLS_CACHE_KEY, $data);
 		return $data;
 	}
 
@@ -106,36 +134,11 @@ class CraftWarmerService extends Component
 	 */
 	protected function getCache(): array
 	{
-		if ($this->urls === null) {
-			$file = $this->getCacheFile();
-			if (!file_exists($file)) {
-				$this->urls = [];
-			} else {
-				$this->urls = json_decode(file_get_contents($file), true);
-			}
+		$cache = \Craft::$app->cache->get(self::URLS_CACHE_KEY, false);
+		if ($cache === false) {
+			return $this->buildCache();
 		}
-		return $this->urls;
-	}
-
-	/**
-	 * Crawl one url, return http code
-	 * 
-	 * @param  string $url
-	 * @return int
-	 */
-	public function crawlOne(string $url): int
-	{
-		return $this->curl($url);
-	}
-
-	/**
-	 * Can the crawling be run
-	 * 
-	 * @return bool
-	 */
-	public function canRun(): bool
-	{
-		return !$this->isLocked();
+		return $cache;
 	}
 
 	/**
@@ -149,13 +152,78 @@ class CraftWarmerService extends Component
 	}
 
 	/**
+	 * Initiate the warmer, locks it and build the urls
+	 * 
+	 * @param $type nojs, console or ajax
+	 * @return bool has the execution time been set properly
+	 */
+	public function initiateWarmer(string $type): bool
+	{
+		if (!$this->getSettings()->disableLocking and $this->isLocked()) {
+			throw CraftWarmerException::locked();
+		}
+		$this->requestType = $type;
+		$this->resetLog();
+		$this->lock();
+		$this->buildCache();
+		return $this->setExecutionTime();
+	}
+
+	/**
+	 * Warms all the urls
+	 * 
+	 * @return  array url => code
+	 */
+	public function warmAll(): array
+	{
+		$this->requireLock();
+		$time = microtime(true);
+		$urls = $this->getUrls(true);
+		CraftWarmer::log('Warming '.$this->getTotalUrls().' urls');
+		$settings = $this->getSettings();
+		$observer = new GuzzleObserver;
+		$warmer = new Warmer($settings->concurrentRequests, $this->getGuzzleOptions(), $observer);
+		$warmer->addUrls($urls);
+		$promise = $warmer->warm()->wait();
+		$this->writeLog($observer->getUrls());
+		$this->trigger(self::EVENT_WARMED_ALL);
+		CraftWarmer::log('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used');
+		return $observer->getUrls();
+	}
+
+	/**
+	 * Warm one batch of urls
+	 * 
+	 * @param  int    $offset
+	 * @return  array url => code
+	 */
+	public function warmBatch(int $offset): array
+	{
+		$this->requireLock();
+		$settings = $this->getSettings();
+		$limit = $settings->maxUrls;
+		$time = microtime(true);
+		CraftWarmer::log('Warming '.$limit.' urls, starting at '.$offset);
+		$observer = new GuzzleObserver;
+		$warmer = new Warmer($settings->concurrentRequests, $this->getGuzzleOptions(), $observer);
+		$warmer->addUrls(array_slice($this->getUrls(true), $offset, $limit));
+		$warmer->warm()->wait();
+		$this->writeLog($observer->getUrls());
+		$this->trigger(self::EVENT_WARMED_BATCH);
+		CraftWarmer::log('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used');
+		return $observer->getUrls();
+	}
+
+	/**
 	 * Write the lock file so processes dont overlap and builds the urls in cache
 	 */
 	public function lock()
 	{
+		if ($this->getSettings()->disableLocking) {
+			return;
+		}
 		CraftWarmer::log('locking cache warmer');
-		// file_put_contents($this->getLockFile(), time());
-		$this->buildCache();
+		file_put_contents($this->getLockFile(), time());
 	}
 
 	/**
@@ -163,21 +231,106 @@ class CraftWarmerService extends Component
 	 */
 	public function unlock()
 	{
-		if ($this->isLocked()) {
+		if ($this->isLocked() and !$this->getSettings()->disableLocking) {
 			CraftWarmer::log('unlocking cache warmer');
 			unlink($this->getLockFile());
 		}
 	}
 
 	/**
-	 * Setting max execution time in case we suppose we don't have enough.
-	 * We'll suppose crawling one url takes 2 seconds.
+	 * Setting max execution time to infinite
 	 * 
 	 * @return bool
 	 */
 	public function setExecutionTime(): bool
 	{
-		return set_time_limit(0);
+		$success = set_time_limit(0);
+		CraftWarmer::log('Setting max_execution_time : '.($success ? 'success' : 'failed').'. Current value : '.ini_get('max_execution_time'));
+		return $success;
+	}
+
+	/**
+	 * Get last run logs
+	 * 
+	 * @return array
+	 */
+	public function getLastRunLogs(): array
+	{
+		$file = $this->getLogFile();
+		if (!file_exists($file)) {
+			return [];
+		}
+		return json_decode(file_get_contents($file), true);
+	}
+
+	/**
+	 * Date of the last run
+	 * 
+	 * @return DateTime|null
+	 */
+	public function getLastRunDate(): ?\DateTime
+	{
+		if (!file_exists($this->getLogFile())) {
+			return null;
+		}
+		$date = new \DateTime();
+		return $date->setTimestamp(filemtime($this->getLogFile()));
+	}
+
+	/**
+	 * Throws exception if lock is not set
+	 */
+	public function requireLock()
+	{
+		if (!$this->getSettings()->disableLocking and !$this->isLocked()) {
+			throw CraftWarmerException::notLocked();
+		}
+	}
+
+	/**
+	 * Get options to be used by guzzle
+	 * @return array
+	 */
+	protected function getGuzzleOptions(): array
+	{
+		$settings = CraftWarmer::$plugin->getSettings();
+		$options = [];
+		if ($settings->userAgent) {
+			$options['headers'] = [
+				'User-Agent' => $settings->userAgent
+			];
+		}
+		return $options;
+	}
+
+	/**
+	 * Write an array of url => code to the log file
+	 * 
+	 * @param  array  $urls
+	 */
+	protected function writeLog(array $urls)
+	{
+		$log = $this->getLastRunLogs();
+		$log = array_merge($log, $urls);
+		file_put_contents($this->getLogFile(), json_encode($log));
+	}
+
+	/**
+	 * Get log file path
+	 * 
+	 * @return string
+	 */
+	protected function getLogFile(): string
+	{
+		return \Craft::getAlias(self::LOG_FILE);
+	}
+
+	/**
+	 * resets log file
+	 */
+	protected function resetLog()
+	{
+		file_put_contents($this->getLogFile(), json_encode([]));
 	}
 
 	/**
@@ -219,16 +372,6 @@ class CraftWarmerService extends Component
 	protected function getLockFile(): string
 	{
 		return \Craft::getAlias(self::LOCK_FILE);
-	}
-
-	/**
-	 * Get cache file full path
-	 * 
-	 * @return string
-	 */
-	protected function getCacheFile(): string
-	{
-		return \Craft::getAlias(self::CACHE_FILE);
 	}
 
 	/**

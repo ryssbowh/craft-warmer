@@ -11,18 +11,35 @@
     on: settings.enableFrontUrl
 }) }}
 
-{{ forms.textField({
-    id: 'front-url',
-    label: 'Url'|t('craftwarmer'),
-    name: 'frontUrl',
-    value: settings.frontUrl,
-    instructions: 'Don\'t include site url, example : warm-cache'|t('craftwarmer'),
-    errors: settings.getErrors('frontUrl'),
-    size: 20
-    }) 
-}}
+<div id="frontend-options" style="display:none;margin-top:20px">
+    {{ forms.textField({
+        id: 'front-url',
+        label: 'Url'|t('craftwarmer'),
+        name: 'frontUrl',
+        value: settings.frontUrl,
+        instructions: 'Don\'t include site url, example : warm-caches'|t('craftwarmer'),
+        errors: settings.getErrors('frontUrl'),
+        required: true,
+        size: 20
+        }) 
+    }}
 
-<div class="sites">
+    {{ forms.textField({
+        id: 'front-secret',
+        label: 'Secret key'|t('craftwarmer'),
+        instructions: 'Secret key to start the warmer'|t('craftwarmer'),
+        name: 'secretKey',
+        value: settings.secretKey,
+        errors: settings.getErrors('secretKey'),
+        required: true, 
+        size: 20,
+        }) 
+    }}
+    <div id="your-front-url"><i>{{ 'Your front-end url is'|t('craftwarmer') }} : {{ currentSite.getBaseUrl() }}<span class="path">{{ settings.frontUrl }}</span>?secret=<span class="secret">{{ settings.secretKey }}</span></i></div> 
+    <div id="your-nojs-url"><i>{{ 'Your no-js (curl, wget) url is'|t('craftwarmer') }} : {{ currentSite.getBaseUrl() }}<span class="path">{{ settings.frontUrl }}</span>/nojs?secret=<span class="secret">{{ settings.secretKey }}</span></i></div> 
+</div>
+
+<div class="sites" style="margin-top:20px">
     <h2>{{ 'Sites'|t('craftwarmer') }}</h2>
     {% for uid, name in sites %}
         <h3>{{ name }}</h3>
@@ -33,7 +50,7 @@
             class: 'site-enable',
             on: (uid in settings.sites)
         }) }}
-        <div style="margin-top:20px">
+        <div style="margin-top:20px;display:none">
             {{ forms.textareaField({
                 label: 'Urls to ignore'|t('craftwarmer'),
                 name: 'ignore['~uid~']',
@@ -57,12 +74,23 @@
 
 <h2>{{ 'Advanced'|t('craftwarmer') }}</h2>
 
-<p><i>{{ 'Those settings don\'t apply to the command line.' }}</i></p>
+{{ forms.textField({
+    type: 'number',
+    label: 'Concurrent requests'|t('craftwarmer'),
+    instructions: 'Number of concurrent requests one process can spawn.'|t('craftwarmer'),
+    name: 'concurrentRequests',
+    value: settings.concurrentRequests,
+    errors: settings.getErrors('concurrentRequests'),
+    required: true,
+    size: 20,
+    min: 1
+    }) 
+}}
 
 {{ forms.textField({
     type: 'number',
     label: 'Max number of processes'|t('craftwarmer'),
-    instructions: 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls.'|t('craftwarmer'),
+    instructions: 'Number of parallel processes the cache warmer can start. The more processes the faster it will be, but it can slow down your whole site if you have lots of urls. This doesn\'t apply to the command line which will have only one process.'|t('craftwarmer'),
     name: 'maxProcesses',
     value: settings.maxProcesses,
     errors: settings.getErrors('maxProcesses'),
@@ -74,24 +102,41 @@
 
 {{ forms.textField({
     type: 'number',
-    label: 'Max number of urls'|t('craftwarmer'),
-    instructions: 'Number of urls one process will crawl, leave empty to let the system decide. Too much and the system might not be able to crawl them all depending on your \'max_execution_time\' setting. Too less and you\'ll slow down the process.'|t('craftwarmer'),
+    label: 'Max urls per process'|t('craftwarmer'),
+    instructions: 'Maximum number of urls one process will visit. This doesn\'t apply to the command line which will visit all urls'|t('craftwarmer'),
     name: 'maxUrls',
     value: settings.maxUrls,
     errors: settings.getErrors('maxUrls'),
+    required: true,
     size: 20,
     min: 1
     }) 
 }}
 
+{{ forms.textField({
+    label: 'User Agent'|t('craftwarmer'),
+    instructions: 'User Agent for the http requests'|t('craftwarmer'),
+    name: 'userAgent',
+    value: settings.userAgent,
+    errors: settings.getErrors('userAgent'),
+    size: 20
+    }) 
+}}
+
+{{ forms.lightswitchField({
+    label: 'Disable locking system'|t('craftwarmer'),
+    name: 'disableLocking',
+    on: settings.disableLocking
+}) }}
+
 {% js %}
     function checkFrontUrl() {
         let enable = $('#settings-enable-front-url-field input');
-        let url = $('#settings-front-url-field');
+        let options = $('#settings-frontend-options');
         if (enable.val() == 1) {
-            url.slideDown('fast');
+            options.slideDown('fast');
         } else {
-            url.slideUp('fast');
+            options.slideUp('fast');
         }
     }
     function checkSiteSettings(lightswitch) {
@@ -102,6 +147,12 @@
             ignore.slideUp('fast');
         }
     }
+    $('#settings-front-url-field input').keyup(function(){
+        $('#settings-your-front-url .path').html($(this).val());
+    });
+    $('#settings-front-secret-field input').keyup(function(){
+        $('#settings-your-front-url .secret').html($(this).val());
+    });
     checkFrontUrl();
     $('#settings-enable-front-url-field').change(function(){
         checkFrontUrl();

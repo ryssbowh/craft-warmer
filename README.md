@@ -2,9 +2,7 @@
 
 Build up your caches for your Craft site with a cache warmer.
 
-The warmer will look at your sites(s) sitemap.xml and crawl them, building the caches (image transforms, imager, html etc) and making the site load faster for your user. This can be useful when clearing the caches after a release for example, or anytime you clear a site's caches.
-
-Some urls can be ignored in the backend's settings, for each site.
+The warmer will look at your sites(s) sitemap.xml and visit them, building up the caches (image transforms, imager, html etc) and making the site load faster for your user. This can be useful when clearing the caches after a release for example, or anytime you clear a site's caches, or make changes in your content.
 
 There are several ways to trigger it :
 - With the utility control panel menu
@@ -13,21 +11,38 @@ There are several ways to trigger it :
 	- visit that url with a browser
 	- or use curl : the url will have to be suffixed by 'nojs', so if you define a front url 'warm', you'll need to curl `http://mysite.com/warm/nojs`
 
-The front end and the control panel triggers will benefit from parallel execution, making the process quicker. The amount of processes and the amount of urls one process will crawl are editable in settings.
-You can also let the system decide the amount of urls to crawl in each process according to your php setting 'max_execution_time', in which case it will assume one url takes 2 seconds to crawl.
+Some urls can be ignored in the backend's settings, for each site.
 
-The parallel execution does not work for console or curl requests. The system will try to set your max_execution_time setting (if allowed by your server), and will crawl all urls.
+The front end and the control panel triggers can benefit from parallel execution, making the process quicker. The amount of processes and the amount of urls one process will warm are editable in settings.
 
-A locking system will prevent several instances of the cache warming.
+The parallel execution does not work for console or curl requests. The system will try to set your max_execution_time setting (if allowed by your server), and will visit all urls.
+
+A locking system can prevent several instances of the cache warming.
 
 ##Installation
 
-Install through composer `composer require ryssbowh/craft-warmer` or using the Craft store.
-Activate site(s) in the settings.
+- Install through composer `composer require ryssbowh/craft-warmer` or using the Craft store.
+- Activate site(s) in the settings.
+- Make sure you have urls in your sitemap
+- Start the warmer using one of the 4 available ways
 
 ##Requirements
 
 - Craft 3.5
+- If you server doesn't allow max_execution_time to be changed, you will be facing issues on large sites for the command line and curl
+
+## Developers
+
+Events you can subscribe on :
+- `Ryssbowh\CraftWarmer\Observers\GuzzleObserver::EVENT_ON_FULFILLED` : when a url has been visited
+- `Ryssbowh\CraftWarmer\Observers\GuzzleObserver::EVENT_ON_REJECTED` : when a url has failed
+- `Ryssbowh\CraftWarmer\Services\CraftWarmerService::EVENT_WARMED_ALL` : when all urls have been visited at once
+- `Ryssbowh\CraftWarmer\Services\CraftWarmerService::EVENT_WARMED_BATCH` : when a batch of urls have been visited
+
+## Languages
+
+- english
+- french
 
 
 Icons made by [Freepik](http://www.freepik.com/)

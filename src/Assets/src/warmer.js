@@ -1,8 +1,13 @@
-class CraftWarmer {
-	constructor(maxExecutionTime, totalUrls, urlLimit, processLimit, progressBar, isAdmin)
+if (typeof Craft.CraftWarmer === typeof undefined) {
+    Craft.CraftWarmer = {};
+}
+
+Craft.CraftWarmer.Warmer = class CraftWarmer {
+	constructor({totalUrls, urlLimit, processLimit, isAdmin, secret}, observer)
 	{
-		this.progressBar = progressBar;
-		this.urlLimit = false;
+		this.observer = observer;
+		this.secret = secret;
+		this.urlLimit = urlLimit;
 		this.totalUrls = totalUrls;
 		this.processLimit = processLimit;
 		this.isAdmin = isAdmin;
@@ -12,13 +17,8 @@ class CraftWarmer {
 		if (!Number.isInteger(processLimit)) {
 			throw 'Limit process must be an integer';
 		}
-		if (!Number.isInteger(maxExecutionTime)) {
-			throw 'maxExecutionTime must be an integer';
-		}
-		if (urlLimit) {
-			this.urlLimit = urlLimit;
-		} else if(maxExecutionTime > 0) {
-			this.urlLimit = maxExecutionTime/2;
+		if (!Number.isInteger(urlLimit)) {
+			throw 'urlLimit must be an integer';
 		}
 	}
 
@@ -36,17 +36,29 @@ class CraftWarmer {
 		this.urlsDone = 0;
 		this.queue = [];
 		this.ajaxCalls = [];
-		this.messages = {};
 		this.promise = $.Deferred();
 		this.finishing = false;
 	}
 
-	lock()
+	getAjaxData(data = {})
+	{
+		if (Craft.csrfTokenName) {
+			data[Craft.csrfTokenName] = Craft.csrfTokenValue;
+		}
+		if (this.secret) {
+			data.secret = this.secret;
+		}
+		return data;
+	}
+
+	initiate()
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('craftwarmer/lock-if-can-run'),
-			dataType: 'json'
+			url: _this.getUrl('craftwarmer/initiate'),
+			dataType: 'json',
+			method: 'POST',
+			data: _this.getAjaxData()
 		});
 	}
 
@@ -55,16 +67,20 @@ class CraftWarmer {
 		let _this = this;
 		return $.ajax({
 			url: _this.getUrl('craftwarmer/unlock'),
-			dataType: 'json'
+			dataType: 'json',
+			method: 'POST',
+			data: _this.getAjaxData()
 		});
 	}
 
-	crawlBatch(data)
+	startBatch(data)
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('craftwarmer/crawl'),
-			data: data
+			url: _this.getUrl('craftwarmer/batch'),
+			data: _this.getAjaxData(data),
+			dataType: 'json',
+			method: 'POST',
 		});
 	}
 
@@ -77,24 +93,27 @@ class CraftWarmer {
 	checkQueue()
 	{
 		let _this = this;
-		if (this.queue.length && this.callsRunning <= this.processLimit) {
+		if (this.queue.length && this.callsRunning < this.processLimit) {
 			let data = this.queue.shift();
 			this.callsRunning++;
-			this.ajaxCalls.push(this.crawlBatch(data)
+			this.ajaxCalls.push(this.startBatch(data)
 				.done(function(data){
 					_this.urlsDone += _this.urlLimit;
-					_this.messages = {..._this.messages, ...data};
-					if (_this.progressBar) {
-						_this.progressBar.updateProgress(_this.urlsDone, _this.totalUrls);
+					if (_this.urlsDone > _this.totalUrls) {
+						_this.urlsDone = _this.totalUrls;
+					}
+					if (_this.observer) {
+						_this.observer.updateProgress(_this.urlsDone, data);
 					}
 					_this.updateRunningCalls();
-				}).fail(function(){
+				}).fail(function(response){
+					Craft.cp.displayError(response.responseJSON.error); 
 					_this.updateRunningCalls();
 			}));
 		}
-		if (!this.queue.length && !this.finishing) {
+		if (!this.queue.length && this.callsRunning == 0 && !this.finishing) {
 			this.finishing = true;
-			$.when(..._this.ajaxCalls).done(function(){
+			$.when(..._this.ajaxCalls).then(function(){
 				_this.unlock().done(function(){
 					_this.promise.resolve(_this.messages);
 					_this.unbindWindowClosing();
@@ -106,18 +125,18 @@ class CraftWarmer {
 	buildQueue()
 	{
 		let current = 0;
-		let data = {};
 		while (this.totalUrls > current) {
-			this.queue.push({limit: this.urlLimit, current: current});
+			this.queue.push({offset: current});
 			current += this.urlLimit;
+			this.checkQueue();
 		}
-		this.checkQueue();
 	}
 
 	bindWindowClosing()
 	{
 		let _this = this;
-		$(window).bind("beforeunload", function() { 
+		$(window).bind("beforeunload", function() {
+			_this.abortAll();
 		    _this.unlock();
 		});
 	}
@@ -127,11 +146,26 @@ class CraftWarmer {
 		$(window).off("beforeunload");
 	}
 
+	abortAll()
+	{
+		for (var i = this.ajaxCalls.length - 1; i >= 0; i--) {
+			this.ajaxCalls[i].abort();
+		}
+	}
+
+	stop()
+	{
+		this.queue = [];
+		this.abortAll();
+		return this.unlock();
+	}
+
 	run()
 	{
 		this.reset();
 		let _this = this;
-		this.lock().done(function(){
+		this.initiate().done(function(data){
+			_this.observer.initiated(data);
 			_this.bindWindowClosing();
 			_this.buildQueue();
 		}).fail(function(data){
@@ -140,5 +174,3 @@ class CraftWarmer {
 		return this.promise;
 	}
 }
-
-window.CraftWarmer = CraftWarmer;

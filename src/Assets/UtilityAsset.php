@@ -6,7 +6,7 @@ use Craft;
 use craft\web\AssetBundle;
 use craft\web\assets\cp\CpAsset;
 
-class WarmerAsset extends AssetBundle
+class UtilityAsset extends AssetBundle
 {
     /**
      * Initializes the bundle.
@@ -14,13 +14,12 @@ class WarmerAsset extends AssetBundle
     public function init()
     {
         // define the path that your publishable resources live
-        $this->sourcePath = __DIR__ . "/src";
+        $this->sourcePath = __DIR__ . "/dist";
 
         // define the relative path to CSS/JS files that should be registered with the page
         // when this asset bundle is registered
         $this->js = [
-            'modal.js',
-            'warmer.js',
+            'utility.js',
         ];
 
         $this->css = [

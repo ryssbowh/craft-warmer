@@ -2,16 +2,14 @@
 
 namespace Ryssbowh\CraftWarmer\Console;
 
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Psr7\Response;
 use Ryssbowh\CraftWarmer\CraftWarmer;
-use Ryssbowh\PhpCacheWarmer\Observer;
-use Ryssbowh\PhpCacheWarmer\Warmer;
+use Ryssbowh\CraftWarmer\Observers\GuzzleObserver;
 use craft\console\Controller;
 use craft\helpers\Console;
+use yii\base\Event;
 use yii\console\ExitCode;
 
-class WarmController extends Controller implements Observer
+class WarmController extends Controller
 {
 	/**
 	 * Crawl all enabled sites to warm up caches
@@ -20,22 +18,28 @@ class WarmController extends Controller implements Observer
 	public function actionIndex()
 	{
 		$service = CraftWarmer::$plugin->warmer;
-		if ($service->isLocked()) {
-			$this->stdout(\Craft::t('craftwarmer',"Cache warming process is already happening, aborting.") . PHP_EOL);
-			return ExitCode::IOERR;
+		try {
+			$safe = $service->initiateWarmer('console');
+			$total = $service->getTotalUrls();
+			if (!$safe) {
+				$this->stdout(\Craft::t('craftwarmer', 'Warning : Unable to change your max execution time ({time} seconds), it might be too small to visit {number} urls', ['time' => ini_get('max_execution_time'), 'number' => $total]) . PHP_EOL);
+			}
+			$this->stdout(\Craft::t('craftwarmer', "Visiting {number} urls ...", ['number' => $total]) . PHP_EOL);
+			Event::on(GuzzleObserver::class, GuzzleObserver::EVENT_ON_FULFILLED, function ($event) {
+				$this->stdout($event->message . PHP_EOL, Console::FG_GREEN);
+			});
+			Event::on(GuzzleObserver::class, GuzzleObserver::EVENT_ON_REJECTED, function ($event) {
+				$this->stderr($event->message . PHP_EOL, Console::FG_RED);
+			});
+			$service->warmAll();
+			$service->unlock();
+		} catch (\Exception $e) {
+			$this->stderr($e->getMessage() . PHP_EOL, Console::FG_RED);
+			CraftWarmer::log('Console request failed');
+			$service->unlock();
+			return ExitCode::UNSPECIFIED_ERROR;
 		}
-		$service->lock();
-		$urls = $service->getUrls(true);
-		$total = sizeof($urls);
-		$safe = $service->setExecutionTime();
-		if (!$safe) {
-			$this->stdout(\Craft::t('craftwarmer', 'Warning : Your max execution time is {time} seconds, which might be too small to crawl {number} urls', ['time' => ini_get('max_execution_time'), 'number' => $total]) . PHP_EOL);
-		}
-		$this->stdout(\Craft::t('craftwarmer', "Crawling {number} urls ...", ['number' => $total]) . PHP_EOL);
-		$crawler = new Warmer($this);
-		$crawler->crawlAll($urls);
-		$service->unlock();
-		CraftWarmer::log('Console request : '.(memory_get_peak_usage()/1000000).' MB memory used');
+		$this->stdout(\Craft::t('craftwarmer', 'Finished, {number} urls were visited', ['number' => $total]) . PHP_EOL);
 		return ExitCode::OK;
 	}
 
@@ -53,15 +57,5 @@ class WarmController extends Controller implements Observer
 			$this->stdout(\Craft::t('craftwarmer', 'The warmer is not locked') . PHP_EOL);
 		}
 		return ExitCode::OK;
-	}
-
-	public function onFulfilled(Response $response, string $url)
-	{
-		$this->stdout(\Craft::t('craftwarmer', 'Visited {url} : {code}', ["url" => $url, "code" => $response->getStatusCode()]) . PHP_EOL, Console::FG_GREEN);
-	}
-
-	public function onRejected(RequestException $reason, string $url)
-	{
-		$this->stderr(\Craft::t('craftwarmer', 'Error visiting {url} : {code}', ['url' => $url, 'code' => $reason->getResponse()->getStatusCode()]) . PHP_EOL, Console::FG_RED);
 	}
 }

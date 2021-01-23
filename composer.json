@@ -21,7 +21,7 @@
     ],
     "require": {
         "craftcms/cms": "^3.5.0",
-        "ryssbowh/php-cache-warmer": "^0.1",
+        "ryssbowh/php-cache-warmer": "^1.0",
         "putyourlightson/craft-log-to-file": "^1.2"
     },
     "autoload": {

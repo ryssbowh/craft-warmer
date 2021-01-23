@@ -1,42 +1,16 @@
 <div class="craft-warmer">
+
 	<h2>{{ 'Warm Caches'|t('craftwarmer') }}</h2>
 
-	{% if total_urls > 0 %}
-		<p>Ready to warm up caches :</p>
+	{% if totalUrls > 0 %}
+		<p>{{ 'Ready to warm up caches :'|t('craftwarmer') }}</p>
 
 		{% for site in sites %}
-			<p style="margin-bottom:0;margin-top:0.3rem">{{ site.name }} : {% if urls[site.id] is defined %} {{ urls[site.id]|length }} {% else %} 0 {% endif %} urls</p>
+			<p class="site">{{ site.name }} : {% if urls[site.id] is defined %} {{ urls[site.id]|length }} {% else %} 0 {% endif %} urls</p>
 		{% endfor %}
-		<br/>
 
-		<button type="submit" class="btn submit secondary warmthemup">{{ 'Warm them'|t('craftwarmer') }}</button>
+		<button type="submit" class="btn submit warmthemup">{{ 'Warm them'|t('craftwarmer') }}</button>
 
-		<div class="break-lock" {% if not locked %}style="display:none"{% endif %}>
-			<br/>
-			<h2>{{ 'Break the lock'|t('craftwarmer') }}</h2>
-			<p>{{ 'The warmer seems locked, you can break the lock with the button below. This can have unintended consequences if somebody else is currently running the cache warmer.'|t('craftwarmer') }}</p>
-			<button class="btn">{{ 'Break it'|t('craftwarmer') }}</button>
-		</div>
-
-		<div id="craftwarmer-modal" class="modal" style="display:none">
-			<div class="body">
-				<h2>{{ 'Crawling urls...'|t('craftwarmer') }}</h2>
-				<div class="progressBar">
-				</div>
-				<div class="progressNumbers centeralign">
-					<span class="current">0</span> / {{ total_urls }}
-				</div>
-				<div class="results-container" style="display:none">
-					<h2>{{ 'Log'|t('craftwarmer') }}</h2>
-					<div class="results"></div>
-				</div>
-			</div>
-			<div class="footer">
-				<div class="buttons right first">
-					<button class="btn close">{{ 'Close'|t('craftwarmer') }}</button>
-				</div>
-			</div>
-		</div>
 	{% else %}
 
 		<p>{{ 'There are no urls defined in your sitemaps, check the following :'|t('craftwarmer') }}</p>
@@ -46,4 +20,56 @@
 		</ul>
 
 	{% endif %}
+
+	<div class="break-lock" {% if not locked %}style="display:none"{% endif %}>
+		<h2>{{ 'Break the lock'|t('craftwarmer') }}</h2>
+		<p>{{ 'Cache warming process is locked (already running), you can break the lock if you want to force the execution'|t('craftwarmer') }}</p>
+		<button class="btn">{{ 'Break it'|t('craftwarmer') }}</button>
+	</div>
+
+	<div id="craft-warmer-log" {% if not logs %}style="display:none"{% endif %}>
+		{% set lastRun = logDate ? logDate | date('d-m-Y H:i') : 'never' %}
+		<h2>{{ 'Log of last run ({lastRun}) :'|t('craftwarmer', {lastRun: '<span class="lastRun">'~lastRun~'</span>'})|raw }}</h2>
+		<div class="logs">
+			{% if logs %}
+				{% for url, code in logs %}
+					<p class="log {% if code != 200 %}error{% endif %}">{{ url }} : {{ code }}</p>
+				{% endfor %}
+			{% endif %}
+		</div>
+	</div>
+
+	<div id="craftwarmer-modal" class="modal" style="display:none">
+		<div class="body">
+			<h2 class="default-title">{{ 'Warming up caches...'|t('craftwarmer') }}</h2>
+			<h2 class="stopping-title" style="display:none">{{ 'Stopping...'|t('craftwarmer') }}</h2>
+			<div class="progressBar">
+			</div>
+		</div>
+		<div class="footer">
+			<div class="buttons right first">
+				<button class="btn close">{{ 'Close'|t('craftwarmer') }}</button>
+			</div>
+		</div>
+	</div>
 </div>
+
+{% css %}
+	.craft-warmer h2:first-child {
+		margin-top: 14px !important;
+	}
+	.craft-warmer .site {
+		font-size: 16px;
+	}
+	.craft-warmer .logs {
+		max-height: 300px;
+		overflow-y: auto;
+		box-shadow: 0 0 0 1px rgba(205, 216, 228, 0.25), 0 2px 12px rgba(205, 216, 228, 0.5);
+		border: 1px solid lightgray;
+		border-radius: 3px;
+		padding: 3px;
+	}
+	.craft-warmer p.log {
+		margin: 0;
+	}
+{% endcss %}

@@ -10,9 +10,13 @@ class Settings extends Model
     public $sites = [];
     public $ignore = [];
     public $enableFrontUrl = false;
+    public $disableLocking = false;
     public $maxProcesses = 1;
-    public $maxUrls = '';
+    public $maxUrls = 25;
+    public $concurrentRequests = 25;
     public $frontUrl = 'warm-caches';
+    public $secretKey = 'H78d@sd92';
+    public $userAgent = '';
     public $sitemaps = [];
 
     /**
@@ -25,9 +29,10 @@ class Settings extends Model
             ['ignore', 'each', 'rule' => ['string']],
             ['sitemaps', 'each', 'rule' => ['string']],
             ['maxProcesses', 'integer', 'min' => 1],
+            ['concurrentRequests', 'integer', 'min' => 1],
             ['maxUrls', 'integer', 'min' => 1],
-            [['frontUrl'], 'string'],
-            ['enableFrontUrl', 'boolean'],
+            [['frontUrl', 'userAgent'], 'string'],
+            [['disableLocking', 'enableFrontUrl'], 'boolean'],
         ];
     }
 

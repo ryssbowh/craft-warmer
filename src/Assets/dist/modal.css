@@ -5,6 +5,9 @@
 #craftwarmer-modal .body {
 	padding-bottom: 62px;
 }
+#craftwarmer-modal h2 {
+	margin-top: 0;
+}
 #craftwarmer-modal .progressBar{
 	width: 100%;
 }
@@ -12,9 +15,10 @@
 	position: static;
 	width: 100%;
 }
-#craftwarmer-modal .progressNumbers {
+#craftwarmer-modal .progressbar-status {
 	font-size: 16px;
 	margin-top: 10px;
+	text-align: center;
 }
 
 #craftwarmer-modal .footer {
