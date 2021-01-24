@@ -163,6 +163,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 
 	abortAll()
 	{
+		this.queue = [];
 		for (var i = this.ajaxCalls.length - 1; i >= 0; i--) {
 			this.ajaxCalls[i].abort();
 		}
@@ -170,7 +171,6 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 
 	stop()
 	{
-		this.queue = [];
 		this.abortAll();
 		return this.terminate();
 	}
