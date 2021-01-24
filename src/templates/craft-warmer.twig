@@ -1,6 +1,6 @@
 <div class="craft-warmer">
 
-	<h2>{{ 'Warm Caches'|t('craftwarmer') }}</h2>
+	<h2 class="no-margin">{{ 'Warm Caches'|t('craftwarmer') }}</h2>
 
 	{% if totalUrls > 0 %}
 		<p>{{ 'Ready to warm up caches :'|t('craftwarmer') }}</p>
@@ -55,7 +55,7 @@
 </div>
 
 {% css %}
-	.craft-warmer h2:first-child {
+	.craft-warmer h2:not(.no-margin) {
 		margin-top: 14px !important;
 	}
 	.craft-warmer .site {

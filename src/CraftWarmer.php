@@ -103,7 +103,6 @@ class CraftWarmer extends Plugin
     	foreach (\Craft::$app->sites->getAllSites() as $site) {
     		$sites[$site->uid] = $site->name;
     	}
-    	// dd($sites);
         return \Craft::$app->view->renderTemplate(
             'craftwarmer/settings',
             [
