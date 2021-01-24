@@ -120,7 +120,9 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 					}
 					_this.updateRunningCalls();
 				}).fail(function(response){
-					Craft.cp.displayError(response.responseJSON.error); 
+					if (response.responseJSON) {
+						Craft.cp.displayError(response.responseJSON.error);
+					}
 					_this.updateRunningCalls();
 			}));
 		}
@@ -199,7 +201,9 @@ $(function() {
 			Craft.cp.displayNotice(Craft.t('craftwarmer', 'Warmup process was successful'));
 		}).fail(function(response){
 			modal.hide();
-			Craft.cp.displayError(response.responseJSON.error);
+			if (response.responseJSON) {
+				Craft.cp.displayError(response.responseJSON.error);
+			}
 			if (!warmer_settings.disableLocking) {
 				$('.break-lock').fadeIn('fast');
 			}
