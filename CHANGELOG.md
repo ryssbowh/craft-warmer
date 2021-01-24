@@ -1,5 +1,9 @@
 # ryssbowh/craft-warmer Changelog
 
+## 1.0.2 - 2021-01-24
+### Fixed
+- Javascript error when stopping
+
 ## 1.0.0 - 2021-01-24
 ### Added
 - Emailing
