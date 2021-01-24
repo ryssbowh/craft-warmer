@@ -33,6 +33,7 @@ class WarmController extends Controller
 			'processLimit' => $settings->maxProcesses,
 			'urlLimit' => $settings->maxUrls,
 			'disableLocking' => $settings->disableLocking,
+			'frontUrl' => $settings->frontUrl,
 			'locked' => $service->isLocked(),
 			'secret' => \Craft::$app->request->getRequiredQueryParam('secret'),
 			'logs' => $service->getLastRunLogs(),
@@ -61,7 +62,7 @@ class WarmController extends Controller
 				$this->response->data .= $event->message . PHP_EOL;
 			});
 			$service->warmAll();
-			$service->unlock();
+			$service->terminate();
 		} catch (\Exception $e) {
 			$this->response->data .= $e->getMessage() . PHP_EOL;
 			$this->response->setStatusCode(500);
@@ -89,9 +90,9 @@ class WarmController extends Controller
 	{
 		$this->requireAcceptsJson();
 		$offset = \Craft::$app->request->getQueryParam('offset', 0);
-		CraftWarmer::$plugin->warmer->setRequestType('ajax');
-		$urlCodes = CraftWarmer::$plugin->warmer->warmBatch($offset);
-		return $this->asJson($urlCodes);
+		$service = CraftWarmer::$plugin->warmer;
+		$service->setRequestType('ajax');
+		return $this->asJson($service->warmBatch($offset));
 	}
 
 	/**
@@ -116,6 +117,29 @@ class WarmController extends Controller
 	}
 
 	/**
+	 * Terminates the warmer
+	 */
+	public function actionTerminate()
+	{
+		$this->requireAcceptsJson();
+		$service = CraftWarmer::$plugin->warmer;
+		$service->setRequestType('ajax');
+		$service->terminate();
+		return $this->asJson([
+			'success' => true
+		]);
+	}
+
+	/**
+	 * Warms a batch of urls (front request)
+	 */
+	public function actionTerminateFront()
+	{
+		$this->checkSecret();
+		return $this->actionTerminate();
+	}
+
+	/**
 	 * Unlocks the warmer
 	 */
 	public function actionUnlock()
@@ -134,6 +158,12 @@ class WarmController extends Controller
 		]);
 	}
 
+	/**
+	 * Validate secret key
+	 * 
+	 * @param  string|null
+	 * @throws CraftWarmerException
+	 */
 	protected function checkSecret(string $secret = null)
 	{
 		if($secret === null) {

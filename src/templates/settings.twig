@@ -65,12 +65,34 @@
                 name: 'sitemaps['~uid~']',
                 value: settings.getSitemap(uid),
                 instructions: 'Don\'t include site url'|t('craftwarmer'),
-                size: 20
+                size: 20,
+                required: true
                 }) 
             }}
         </div>
     {% endfor %}
 </div>
+
+<h2>{{ 'Emailing'|t('craftwarmer') }}</h2>
+
+{{ forms.lightswitch({
+    id: 'email-me',
+    label: 'Email me when the warmer finishes'|t('craftwarmer'),
+    name: 'emailMe',
+    on: settings.emailMe
+}) }}
+
+{{ forms.autosuggestField({
+    label: 'Email'|t('craftwarmer'),
+    id: 'email',
+    name: 'email',
+    value: settings.email,
+    errors: settings.getErrors('email'),
+    suggestEnvVars: true,
+    size: 40,
+    required: true
+    }) 
+}}
 
 <h2>{{ 'Advanced'|t('craftwarmer') }}</h2>
 
@@ -147,6 +169,15 @@
             ignore.slideUp('fast');
         }
     }
+    function checkEmail() {
+        let enable = $('#settings-email-me input');
+        let email = $('#settings-email-field');
+        if (enable.val() == 1) {
+            email.slideDown('fast');
+        } else {
+            email.slideUp('fast');
+        }
+    }
     $('#settings-front-url-field input').keyup(function(){
         $('#settings-your-front-url .path').html($(this).val());
     });
@@ -154,8 +185,12 @@
         $('#settings-your-front-url .secret').html($(this).val());
     });
     checkFrontUrl();
+    checkEmail();
     $('#settings-enable-front-url-field').change(function(){
         checkFrontUrl();
+    });
+    $('#settings-email-me').change(function(){
+        checkEmail();
     });
     $.each($('.sites .lightswitch'), function(){
         checkSiteSettings($(this));

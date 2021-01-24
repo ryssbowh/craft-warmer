@@ -20,8 +20,8 @@ var warmer_settings = {
 	totalUrls: {{ totalUrls }}, 
 	urlLimit: {{ urlLimit }},
 	processLimit: {{ processLimit }},
-	isAdmin: false,
 	secret: '{{ secret }}',
-	disableLocking: {{ disableLocking ? 'true' : 'false' }}
+	disableLocking: {{ disableLocking ? 'true' : 'false' }},
+	urlPath: '{{ frontUrl }}'
 };
 {% endjs %}

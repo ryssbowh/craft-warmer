@@ -17,16 +17,11 @@ class FrontAsset extends AssetBundle
         $this->sourcePath = __DIR__ . "/dist";
 
         $this->css = [
-            'front.css',
-            'modal.css',
-        ];
-
-        $this->js = [
-            'front.js',
+            'front.css'
         ];
 
         $this->depends = [
-            CpAsset::class
+            UtilityAsset::class
         ];
 
         parent::init();

@@ -11,11 +11,13 @@ class Settings extends Model
     public $ignore = [];
     public $enableFrontUrl = false;
     public $disableLocking = false;
+    public $emailMe = false;
     public $maxProcesses = 1;
     public $maxUrls = 25;
     public $concurrentRequests = 25;
     public $frontUrl = 'warm-caches';
     public $secretKey = 'H78d@sd92';
+    public $email = '';
     public $userAgent = '';
     public $sitemaps = [];
 
@@ -31,9 +33,22 @@ class Settings extends Model
             ['maxProcesses', 'integer', 'min' => 1],
             ['concurrentRequests', 'integer', 'min' => 1],
             ['maxUrls', 'integer', 'min' => 1],
-            [['frontUrl', 'userAgent'], 'string'],
-            [['disableLocking', 'enableFrontUrl'], 'boolean'],
+            [['frontUrl', 'userAgent', 'email'], 'string'],
+            [['frontUrl', 'secretKey'], 'required', 'when' => function($model) {
+                return $model->enableFrontUrl;
+            }],
+            [['disableLocking', 'enableFrontUrl', 'emailMe'], 'boolean'],
+            [['concurrentRequests', 'maxProcesses', 'maxUrls'], 'required'],
+            ['email', 'email'],
+            ['email', 'required', 'when' => function($model) {
+                return $model->emailMe;
+            }]
         ];
+    }
+
+    public function validateEmail()
+    {
+
     }
 
     /**
@@ -67,5 +82,10 @@ class Settings extends Model
             }
         }
         return parent::validate($attributeNames, $clearErrors);
+    }
+
+    public function getEmail(): string
+    {
+        return \Craft::parseEnv($this->email);
     }
 }

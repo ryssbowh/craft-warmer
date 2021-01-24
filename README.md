@@ -9,7 +9,7 @@ There are several ways to trigger it :
 - Console command : `php craft craftwarmer/warm`
 - Through a front end url that you can enable in the settings :
 	- visit that url with a browser
-	- or use curl : the url will have to be suffixed by 'nojs', so if you define a front url 'warm', you'll need to curl `http://mysite.com/warm/nojs`
+	- or use tools like curl
 
 Some urls can be ignored in the backend's settings, for each site.
 
@@ -19,14 +19,21 @@ The parallel execution does not work for console or curl requests. The system wi
 
 A locking system can prevent several instances of the cache warming.
 
-##Installation
+The warmer will tell you which http code returns each of your urls, so you can quickly spot any issues.
+
+It's important that you set your config `generateTransformsBeforePageLoad` to `true` or your assets transforms won't be generated.
+
+You can send an email after each warmer's run.
+
+## Installation
 
 - Install through composer `composer require ryssbowh/craft-warmer` or using the Craft store.
+- set your config `generateTransformsBeforePageLoad` to `true`
 - Activate site(s) in the settings.
 - Make sure you have urls in your sitemap
 - Start the warmer using one of the 4 available ways
 
-##Requirements
+## Requirements
 
 - Craft 3.5
 - If you server doesn't allow max_execution_time to be changed, you will be facing issues on large sites for the command line and curl

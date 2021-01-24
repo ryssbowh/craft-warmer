@@ -32,7 +32,7 @@ class WarmController extends Controller
 				$this->stderr($event->message . PHP_EOL, Console::FG_RED);
 			});
 			$service->warmAll();
-			$service->unlock();
+			$service->terminate();
 		} catch (\Exception $e) {
 			$this->stderr($e->getMessage() . PHP_EOL, Console::FG_RED);
 			CraftWarmer::log('Console request failed');

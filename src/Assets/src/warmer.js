@@ -3,7 +3,7 @@ if (typeof Craft.CraftWarmer === typeof undefined) {
 }
 
 Craft.CraftWarmer.Warmer = class CraftWarmer {
-	constructor({totalUrls, urlLimit, processLimit, isAdmin, secret}, observer)
+	constructor({totalUrls, urlLimit, processLimit, isAdmin = false, secret = false, urlPath = 'craftwarmer'}, observer)
 	{
 		this.observer = observer;
 		this.secret = secret;
@@ -11,6 +11,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		this.totalUrls = totalUrls;
 		this.processLimit = processLimit;
 		this.isAdmin = isAdmin;
+		this.urlPath = urlPath;
 		if (!Number.isInteger(totalUrls)) {
 			throw 'Total urls must be an integer';
 		}
@@ -22,22 +23,13 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		}
 	}
 
-	getUrl(url)
+	getAjaxUrl(url)
 	{
+		url = this.urlPath + '/' + url;
 		if (this.isAdmin) {
 			return Craft.getCpUrl(url);
 		}
 		return Craft.getSiteUrl(url);
-	}
-
-	reset()
-	{
-		this.callsRunning = 0;
-		this.urlsDone = 0;
-		this.queue = [];
-		this.ajaxCalls = [];
-		this.promise = $.Deferred();
-		this.finishing = false;
 	}
 
 	getAjaxData(data = {})
@@ -51,11 +43,21 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		return data;
 	}
 
+	reset()
+	{
+		this.callsRunning = 0;
+		this.urlsDone = 0;
+		this.queue = [];
+		this.ajaxCalls = [];
+		this.promise = $.Deferred();
+		this.finishing = false;
+	}
+
 	initiate()
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('craftwarmer/initiate'),
+			url: _this.getAjaxUrl('initiate'),
 			dataType: 'json',
 			method: 'POST',
 			data: _this.getAjaxData()
@@ -66,7 +68,18 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('craftwarmer/unlock'),
+			url: _this.getAjaxUrl('unlock'),
+			dataType: 'json',
+			method: 'POST',
+			data: _this.getAjaxData()
+		});
+	}
+
+	terminate()
+	{
+		let _this = this;
+		return $.ajax({
+			url: _this.getAjaxUrl('terminate'),
 			dataType: 'json',
 			method: 'POST',
 			data: _this.getAjaxData()
@@ -77,7 +90,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 	{
 		let _this = this;
 		return $.ajax({
-			url: _this.getUrl('craftwarmer/batch'),
+			url: _this.getAjaxUrl('batch'),
 			data: _this.getAjaxData(data),
 			dataType: 'json',
 			method: 'POST',
@@ -114,7 +127,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		if (!this.queue.length && this.callsRunning == 0 && !this.finishing) {
 			this.finishing = true;
 			$.when(..._this.ajaxCalls).then(function(){
-				_this.unlock().done(function(){
+				_this.terminate().done(function(){
 					_this.promise.resolve(_this.messages);
 					_this.unbindWindowClosing();
 				});
@@ -137,7 +150,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		let _this = this;
 		$(window).bind("beforeunload", function() {
 			_this.abortAll();
-		    _this.unlock();
+		    _this.terminate();
 		});
 	}
 
@@ -157,7 +170,7 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 	{
 		this.queue = [];
 		this.abortAll();
-		return this.unlock();
+		return this.terminate();
 	}
 
 	run()
@@ -174,3 +187,35 @@ Craft.CraftWarmer.Warmer = class CraftWarmer {
 		return this.promise;
 	}
 }
+
+$(function() {
+	new Craft.CraftWarmer.Modal('#craftwarmer-modal', {total_urls: warmer_settings.totalUrls});
+	let modal = $('#craftwarmer-modal').data('modal');
+	let craftwarmer = new Craft.CraftWarmer.Warmer(warmer_settings, modal);
+	$('.warmthemup').click(function(){
+		modal.show();
+		craftwarmer.run().done(function(){
+			modal.hide();
+			Craft.cp.displayNotice(Craft.t('craftwarmer', 'Warmup process was successful'));
+		}).fail(function(response){
+			modal.hide();
+			Craft.cp.displayError(response.responseJSON.error);
+			if (!warmer_settings.disableLocking) {
+				$('.break-lock').fadeIn('fast');
+			}
+		});
+	});
+	$('.break-lock button').click(function(){
+		craftwarmer.unlock().done(function(data){
+			Craft.cp.displayNotice(data.message);
+			$('.break-lock').fadeOut('fast');
+		});
+	});
+	$('#craftwarmer-modal .close').click(function(e){
+		e.preventDefault();
+		modal.stopping();
+		craftwarmer.stop().done(function(data){
+			modal.hide();
+		});
+	});
+});

@@ -10,7 +10,7 @@ Craft.CraftWarmer.Modal = Garnish.Modal.extend({
 	$stoppingTitle: null, 
 	$lastRun: null,
 	$close: null,
-	init: function(container, settings) {
+	init: function(container, settings) { 
 		settings.hideOnEsc = false;
         settings.hideOnShadeClick = false;
 		this.setSettings(settings, Garnish.Modal.defaults);

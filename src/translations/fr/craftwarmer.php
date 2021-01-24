@@ -46,5 +46,12 @@ return [
 	'Your have enabled at least one site in the {tag}settings{endtag}' => 'Que vous avez activé au moins un site dans les {tag}paramètres{endtag}',
 	'Your sitemaps are accessible through internet and contain urls' => 'Que vos sitemaps sont accessible par Internet and contiennent des urls',
 	'User Agent for the http requests' => 'User Agent pour les requêtes http',
-	'User Agent' => 'User Agent'
+	'User Agent' => 'User Agent',
+	'Emailing' => 'Email',
+	'Email me when the warmer finishes' => 'Recevoir un email quand le rechauffeur se termine',
+	'Email' => 'Email',
+	'Craft warmer report' => 'Rapport du réchauffeur de cache',
+	'Hi {name}' => 'Bonjour {name}',
+	'The Craft warmer has finished visiting {number} urls, here\'s a report :' => 'Le réchauffeur de cache a terminé de visiter {number} urls, voici un rapport :',
+	'Thanks for using this plugin !' => 'Merci d\'utiliser ce plugin !'
 ];

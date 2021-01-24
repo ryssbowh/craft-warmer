@@ -19,11 +19,15 @@ class UtilityAsset extends AssetBundle
         // define the relative path to CSS/JS files that should be registered with the page
         // when this asset bundle is registered
         $this->js = [
-            'utility.js',
+            'craftwarmer.js',
         ];
 
         $this->css = [
             'modal.css',
+        ];
+
+        $this->depends = [
+            CpAsset::class
         ];
 
         parent::init();

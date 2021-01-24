@@ -50,6 +50,7 @@ class CraftWarmer extends Plugin
             $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch';
             $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate';
             $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
+            $event->rules['craftwarmer/terminate'] = 'craftwarmer/warm/terminate';
         });
 
         $settings = $this->getSettings();
@@ -57,9 +58,10 @@ class CraftWarmer extends Plugin
             Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
                 $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
                 $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
-                $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch-front';
-                $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate-front';
-                $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
+                $event->rules[$settings->frontUrl.'/batch'] = 'craftwarmer/warm/batch-front';
+                $event->rules[$settings->frontUrl.'/initiate'] = 'craftwarmer/warm/initiate-front';
+                $event->rules[$settings->frontUrl.'/unlock'] = 'craftwarmer/warm/unlock';
+                $event->rules[$settings->frontUrl.'/terminate'] = 'craftwarmer/warm/terminate-front';
             });
             Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
                 $event->roots['craftwarmer'] = __DIR__ . '/templates';

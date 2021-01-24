@@ -43,5 +43,12 @@ return [
 	'Disable locking system' => 'Disable locking system',
 	'Warm them' => 'Warm them',
 	'User Agent' => 'User Agent',
-	'User Agent for the http requests' => 'User Agent for the http requests'
+	'User Agent for the http requests' => 'User Agent for the http requests',
+	'Emailing' => 'Emailing',
+	'Email me when the warmer finishes' => 'Email me when the warmer finishes',
+	'Email' => 'Email',
+	'Craft warmer report' => 'Craft warmer report',
+	'Hi {name}' => 'Hi {name}',
+	'The Craft warmer has finished visiting {number} urls, here\'s a report :' => 'The Craft warmer has finished visiting {number} urls, here\'s a report :',
+	'Thanks for using this plugin !' => 'Thanks for using this plugin !'
 ];

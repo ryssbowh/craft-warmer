@@ -155,6 +155,7 @@ class CraftWarmerService extends Component
 	 * Initiate the warmer, locks it and build the urls
 	 * 
 	 * @param $type nojs, console or ajax
+	 * @throws CraftWarmerException
 	 * @return bool has the execution time been set properly
 	 */
 	public function initiateWarmer(string $type): bool
@@ -227,6 +228,15 @@ class CraftWarmerService extends Component
 	}
 
 	/**
+	 * Terminates the warmer
+	 */
+	public function terminate()
+	{
+		$this->unlock();
+		$this->sendEmail($this->getLastRunLogs());
+	}
+
+	/**
 	 * Delete the lock file
 	 */
 	public function unlock()
@@ -288,6 +298,40 @@ class CraftWarmerService extends Component
 	}
 
 	/**
+	 * Send email
+	 * 
+	 * @param  array  $urls
+	 */
+	protected function sendEmail(array $urls): bool
+	{
+		$settings = CraftWarmer::$plugin->getSettings();
+		if (!$settings->emailMe or !$settings->email) {
+			return false;
+		}
+		$email = $settings->getEmail();
+		// dd(\Craft::$app->projectConfig->get('email.fromName'));
+		$success = \Craft::$app
+            ->getMailer()
+            ->compose()
+            ->setFrom([
+            	\Craft::$app->projectConfig->get('email.fromEmail') => \Craft::$app->projectConfig->get('email.fromName')
+            ])
+            ->setTo($email)
+            ->setSubject(\Craft::t('craftwarmer', 'Craft warmer report'))
+            ->setHtmlBody(\Craft::$app->view->renderTemplate('craftwarmer/email', [
+            	'urls' => $urls,
+            	'name' => \Craft::$app->projectConfig->get('email.fromName')
+            ]))
+            ->send();
+        if ($success) {
+        	CraftWarmer::log('Emailed '.$email);
+        } else {
+        	CraftWarmer::log('Failed to email '.$email);
+        }
+        return $success;
+	}
+
+	/**
 	 * Get options to be used by guzzle
 	 * @return array
 	 */
@@ -346,7 +390,7 @@ class CraftWarmerService extends Component
 		$ignores = str_replace("\r\n", PHP_EOL, $ignores);
 		$ignores = explode(PHP_EOL, $ignores);
 		foreach ($ignores as $ignore) {
-			if (substr($ignore, 0, 1) == '/' and substr($ignore, -1) == '/') {
+			if ($ignore != '/' and substr($ignore, 0, 1) == '/' and substr($ignore, -1) == '/') {
 				//regular expression
 				foreach ($urls as $key => $url) {
 					if (preg_match($ignore, $url)) {
@@ -355,7 +399,11 @@ class CraftWarmerService extends Component
 				}
 			} else {
 				foreach ($urls as $key => $url) {
-					if ($url == $ignore) {
+					$path = str_replace($site->getBaseUrl(), '', $url);
+					if ($path == '') {
+						$path = '/';
+					}
+					if ($path == $ignore) {
 						unset($urls[$key]);
 					}
 				}

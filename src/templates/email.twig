@@ -1,0 +1,9 @@
+<h3>{{ 'Hi {name}'|t('craftwarmer', {name: name}) }},</h3>
+
+<p>{{ 'The Craft warmer has finished visiting {number} urls, here\'s a report :'|t('craftwarmer', {number: urls|length}) }}</p>
+
+{% for url, code in urls %}
+	<p style="margin:0;{% if code != 200 %}color:red{% endif %}">{{ url }} : {{ code }}</p>
+{% endfor %}
+
+<p>{{ 'Thanks for using this plugin !'|t('craftwarmer') }}</p>
