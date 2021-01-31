@@ -16,7 +16,8 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Boris Blondin"
+          "name": "The Web Puzzlers",
+          "homepage": "https://github.com/ryssbowh"
         }
     ],
     "require": {
@@ -30,6 +31,7 @@
         }
     },
     "extra": {
+        "documentationUrl": "https://github.com/ryssbowh/craft-warmer",
         "name": "Cache Warmer",
         "handle": "craftwarmer",
         "class": "Ryssbowh\\CraftWarmer\\CraftWarmer"
