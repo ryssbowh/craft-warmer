@@ -9,6 +9,7 @@ use Ryssbowh\CraftWarmer\Observers\GuzzleObserver;
 use Ryssbowh\PhpCacheWarmer\Warmer;
 use craft\base\Component;
 use craft\models\Site;
+use craft\web\View;
 use vipnytt\SitemapParser;
 
 class CraftWarmerService extends Component
@@ -29,7 +30,7 @@ class CraftWarmerService extends Component
 	 */
 	protected $requestType = '';
 
-	public function init()
+	public function init(): void
 	{
 		$file = $this->getLockFile();
 		$folder = dirname($file);
@@ -142,6 +143,14 @@ class CraftWarmerService extends Component
 	}
 
 	/**
+	 * Clear url caches
+	 */
+	public function clearCaches()
+	{
+		\Craft::$app->cache->delete(self::URLS_CACHE_KEY);
+	}
+
+	/**
 	 * Is the warmer locked
 	 * 
 	 * @return bool
@@ -180,7 +189,7 @@ class CraftWarmerService extends Component
 		$this->requireLock();
 		$time = microtime(true);
 		$urls = $this->getUrls(true);
-		CraftWarmer::log('Warming '.$this->getTotalUrls().' urls');
+		\Craft::debug('Warming '.$this->getTotalUrls().' urls', 'craft-warmer');
 		$settings = $this->getSettings();
 		$observer = new GuzzleObserver;
 		$warmer = new Warmer($settings->concurrentRequests, $this->getGuzzleOptions(), $observer);
@@ -188,7 +197,7 @@ class CraftWarmerService extends Component
 		$promise = $warmer->warm()->wait();
 		$this->writeLog($observer->getUrls());
 		$this->trigger(self::EVENT_WARMED_ALL);
-		CraftWarmer::log('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used');
+		\Craft::info('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used', 'craft-warmer');
 		return $observer->getUrls();
 	}
 
@@ -204,14 +213,14 @@ class CraftWarmerService extends Component
 		$settings = $this->getSettings();
 		$limit = $settings->maxUrls;
 		$time = microtime(true);
-		CraftWarmer::log('Warming '.$limit.' urls, starting at '.$offset);
+		\Craft::debug('Warming '.$limit.' urls, starting at '.$offset, 'craft-warmer');
 		$observer = new GuzzleObserver;
 		$warmer = new Warmer($settings->concurrentRequests, $this->getGuzzleOptions(), $observer);
 		$warmer->addUrls(array_slice($this->getUrls(true), $offset, $limit));
 		$warmer->warm()->wait();
 		$this->writeLog($observer->getUrls());
 		$this->trigger(self::EVENT_WARMED_BATCH);
-		CraftWarmer::log('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used');
+		\Craft::debug('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used', 'craft-warmer');
 		return $observer->getUrls();
 	}
 
@@ -223,7 +232,7 @@ class CraftWarmerService extends Component
 		if ($this->getSettings()->disableLocking) {
 			return;
 		}
-		CraftWarmer::log('locking cache warmer');
+		\Craft::debug('locking cache warmer', 'craft-warmer');
 		file_put_contents($this->getLockFile(), time());
 	}
 
@@ -242,7 +251,7 @@ class CraftWarmerService extends Component
 	public function unlock()
 	{
 		if ($this->isLocked() and !$this->getSettings()->disableLocking) {
-			CraftWarmer::log('unlocking cache warmer');
+			\Craft::debug('unlocking cache warmer', 'craft-warmer');
 			unlink($this->getLockFile());
 		}
 	}
@@ -255,7 +264,7 @@ class CraftWarmerService extends Component
 	public function setExecutionTime(): bool
 	{
 		$success = set_time_limit(0);
-		CraftWarmer::log('Setting max_execution_time : '.($success ? 'success' : 'failed').'. Current value : '.ini_get('max_execution_time'));
+		\Craft::debug('Setting max_execution_time : '.($success ? 'success' : 'failed').'. Current value : '.ini_get('max_execution_time'), 'craft-warmer');
 		return $success;
 	}
 
@@ -309,7 +318,6 @@ class CraftWarmerService extends Component
 			return false;
 		}
 		$email = $settings->getEmail();
-		// dd(\Craft::$app->projectConfig->get('email.fromName'));
 		$success = \Craft::$app
             ->getMailer()
             ->compose()
@@ -321,12 +329,12 @@ class CraftWarmerService extends Component
             ->setHtmlBody(\Craft::$app->view->renderTemplate('craftwarmer/email', [
             	'urls' => $urls,
             	'name' => \Craft::$app->projectConfig->get('email.fromName')
-            ]))
+            ], View::TEMPLATE_MODE_SITE))
             ->send();
         if ($success) {
-        	CraftWarmer::log('Emailed '.$email);
+        	\Craft::info('Emailed '.$email, 'craft-warmer');
         } else {
-        	CraftWarmer::log('Failed to email '.$email);
+        	\Craft::error('Failed to email '.$email, 'craft-warmer');
         }
         return $success;
 	}

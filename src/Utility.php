@@ -3,16 +3,14 @@
 namespace Ryssbowh\CraftWarmer;
 
 use Craft;
-use GitWrapper\Exception\GitException;
 use Ryssbowh\CraftWarmer\Assets\UtilityAsset;
-use Ryssbowh\Git\Assets\GitAsset;
 
 class Utility extends \craft\base\Utility
 {
 	/**
 	 * @inheritDoc
 	 */
-	public static function displayName (): string
+	public static function displayName(): string
 	{
 		return Craft::t('craftwarmer', 'Cache Warmer');
 	}
@@ -28,7 +26,7 @@ class Utility extends \craft\base\Utility
 	/**
 	 * @inheritDoc
 	 */
-	public static function iconPath ()
+	public static function iconPath(): ?string
 	{
 		return Craft::getAlias('@Ryssbowh/CraftWarmer/icon_utility.svg');
 	}
@@ -36,7 +34,7 @@ class Utility extends \craft\base\Utility
 	/**
 	 * @inheritDoc
 	 */
-	public static function contentHtml (): string
+	public static function contentHtml(): string
 	{
 		\Craft::$app->view->registerAssetBundle(UtilityAsset::class);
 

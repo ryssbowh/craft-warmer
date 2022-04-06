@@ -34,8 +34,9 @@ class WarmController extends Controller
 			$service->warmAll();
 			$service->terminate();
 		} catch (\Exception $e) {
+			\Craft::$app->errorHandler->logException($e);
 			$this->stderr($e->getMessage() . PHP_EOL, Console::FG_RED);
-			CraftWarmer::log('Console request failed');
+			\Craft::debug('Console request failed', 'craft-warmer');
 			$service->unlock();
 			return ExitCode::UNSPECIFIED_ERROR;
 		}

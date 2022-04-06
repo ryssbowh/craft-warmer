@@ -5,14 +5,15 @@ namespace Ryssbowh\CraftWarmer;
 use Ryssbowh\CraftWarmer\Models\Settings;
 use Ryssbowh\CraftWarmer\Services\CraftWarmerService;
 use Ryssbowh\CraftWarmer\Utility;
+use craft\base\Model;
 use craft\base\Plugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
 use craft\services\Utilities;
+use craft\utilities\ClearCaches;
 use craft\web\UrlManager;
 use craft\web\View;
-use putyourlightson\logtofile\LogToFile;
 use yii\base\Event;
 use yii\web\Response;
 
@@ -20,11 +21,11 @@ class CraftWarmer extends Plugin
 {
     public static $plugin;
 
-    public $hasCpSettings = true;
+    public bool $hasCpSettings = true;
 
     public $controllerNamespace = 'Ryssbowh\\CraftWarmer\\Controllers';
 
-    public function init()
+    public function init(): void
     {
         parent::init();
 
@@ -67,18 +68,25 @@ class CraftWarmer extends Plugin
                 $event->roots['craftwarmer'] = __DIR__ . '/templates';
             });
         }
+
+        Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS, function (Event $event) {
+            $event->options[] = [
+                'key' => 'warmer-cache',
+                'label' => \Craft::t('craftwarmer', 'Warmer sitemap urls'),
+                'action' => function () {
+                    CraftWarmer::$plugin->warmer->clearCaches();
+                }
+            ];
+        });
     }
 
     /**
-     * Log on a separate file
-     * 
-     * @param  $message
-     * @param  string $type
+     * @inheritDoc
      */
-    public static function log($message, $type = 'log')
+    public function afterSaveSettings(): void
     {
-        $requestType = self::$plugin->warmer->getRequestType();
-        LogToFile::$type($requestType.': '.$message, 'craftwarmer');
+        parent::afterSaveSettings();
+        $this->warmer->clearCaches();
     }
 
     /**
@@ -86,7 +94,7 @@ class CraftWarmer extends Plugin
      *
      * @return \craft\base\Model|null
      */
-    protected function createSettingsModel()
+    protected function createSettingsModel(): ?Model
     {
         return new Settings();
     }

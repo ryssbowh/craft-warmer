@@ -12,7 +12,7 @@ use yii\web\NotFoundHttpException;
 
 class WarmController extends Controller
 {
-	protected $allowAnonymous = self::ALLOW_ANONYMOUS_LIVE;
+	protected array|int|bool $allowAnonymous = self::ALLOW_ANONYMOUS_LIVE;
 
 	/**
 	 * Front request
@@ -67,7 +67,7 @@ class WarmController extends Controller
 			$this->response->data .= $e->getMessage() . PHP_EOL;
 			$this->response->setStatusCode(500);
 			$service->unlock();
-			CraftWarmer::log('nojs request failed');
+			\Craft::debug('nojs request failed', 'craft-warmer');
 			return $this->response;
 		}
 		$this->response->data .= \Craft::t('craftwarmer', 'Finished, {number} urls were visited', ['number' => $total]) . PHP_EOL;
