@@ -1,6 +1,6 @@
 # ryssbowh/craft-warmer Changelog
 
-## 2.0.0 - unreleased
+## 2.0.0 - 2022-05-10
 
 ### Changed
 - Craft 4 support
