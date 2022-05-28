@@ -17,7 +17,7 @@
         label: 'Url'|t('craftwarmer'),
         name: 'frontUrl',
         value: settings.frontUrl,
-        instructions: 'Don\'t include site url, example : warm-caches'|t('craftwarmer'),
+        instructions: "Don't include site url, example : warm-caches"|t('craftwarmer'),
         errors: settings.getErrors('frontUrl'),
         required: true,
         size: 20
@@ -72,6 +72,12 @@
         </div>
     {% endfor %}
 </div>
+
+{{ forms.lightswitchField({
+    label: "Auto warm pages related to an element when it's saved"|t('craftwarmer'),
+    name: 'autoWarmElements',
+    on: settings.autoWarmElements
+}) }}
 
 <h2>{{ 'Emailing'|t('craftwarmer') }}</h2>
 

@@ -1,5 +1,9 @@
 # ryssbowh/craft-warmer Changelog
 
+## 1.1.0 - 2022-05-28
+### Added
+- Auto warm pages when elements are saved
+
 ## 1.0.2 - 2021-01-24
 ### Fixed
 - Javascript error when stopping
