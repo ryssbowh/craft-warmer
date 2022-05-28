@@ -25,6 +25,8 @@ It's important that you set your config `generateTransformsBeforePageLoad` to `t
 
 You can send an email after each warmer's run.
 
+From 1.1.0 elements urls (and related elements urls) can be warmed automatically when they are saved, this will need to be enabled in the settings.
+
 ## Installation
 
 - Install through composer `composer require ryssbowh/craft-warmer` or using the Craft store.

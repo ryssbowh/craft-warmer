@@ -2,7 +2,9 @@
 
 ## 1.1.0 - 2022-05-28
 ### Added
-- Auto warm pages when elements are saved
+- Auto warm pages through a job when elements are saved
+### Fixed
+- No-js url not updated when changing front end url in settings
 
 ## 1.0.2 - 2021-01-24
 ### Fixed

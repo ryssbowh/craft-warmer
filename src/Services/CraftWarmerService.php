@@ -329,7 +329,7 @@ class CraftWarmerService extends Component
 		if ($urls) {
 			Queue::push(new WarmUrls([
 				'urls' => array_unique($urls)
-			]));
+			]), null, 2);
 		}
 	}
 
