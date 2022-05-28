@@ -10,6 +10,8 @@ use craft\base\Plugin;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\events\RegisterUrlRulesEvent;
+use craft\helpers\ElementHelper;
+use craft\services\Elements;
 use craft\services\Utilities;
 use craft\utilities\ClearCaches;
 use craft\web\UrlManager;
@@ -23,8 +25,6 @@ class CraftWarmer extends Plugin
 
     public bool $hasCpSettings = true;
 
-    public $controllerNamespace = 'Ryssbowh\\CraftWarmer\\Controllers';
-
     public function init(): void
     {
         parent::init();
@@ -35,49 +35,10 @@ class CraftWarmer extends Plugin
             'warmer' => CraftWarmerService::class
         ]);
 
-        if (\Craft::$app->getRequest()->getIsConsoleRequest()) {
-            $this->controllerNamespace = 'Ryssbowh\\CraftWarmer\\Console';
-        }
-
-        Event::on(
-            Utilities::class,
-            Utilities::EVENT_REGISTER_UTILITY_TYPES,
-            function (RegisterComponentTypesEvent $event) {
-                $event->types[] = Utility::class;
-            }
-        );
-
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
-            $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch';
-            $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate';
-            $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
-            $event->rules['craftwarmer/terminate'] = 'craftwarmer/warm/terminate';
-        });
-
-        $settings = $this->getSettings();
-        if ($settings->enableFrontUrl) {
-            Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
-                $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
-                $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
-                $event->rules[$settings->frontUrl.'/batch'] = 'craftwarmer/warm/batch-front';
-                $event->rules[$settings->frontUrl.'/initiate'] = 'craftwarmer/warm/initiate-front';
-                $event->rules[$settings->frontUrl.'/unlock'] = 'craftwarmer/warm/unlock';
-                $event->rules[$settings->frontUrl.'/terminate'] = 'craftwarmer/warm/terminate-front';
-            });
-            Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
-                $event->roots['craftwarmer'] = __DIR__ . '/templates';
-            });
-        }
-
-        Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS, function (Event $event) {
-            $event->options[] = [
-                'key' => 'warmer-cache',
-                'label' => \Craft::t('craftwarmer', 'Warmer sitemap urls'),
-                'action' => function () {
-                    CraftWarmer::$plugin->warmer->clearCaches();
-                }
-            ];
-        });
+        $this->registerUtility();
+        $this->registerUrls();
+        $this->registerTemplates();
+        $this->registerElementEvents();
     }
 
     /**
@@ -117,6 +78,59 @@ class CraftWarmer extends Plugin
                 'settings' => $this->getSettings(),
                 'sites' => $sites
             ]
+        );
+    }
+
+    protected function registerElementEvents()
+    {
+        if ($this->getSettings()->autoWarmElements) {
+            Event::on(Elements::class, Elements::EVENT_AFTER_SAVE_ELEMENT, function ($e) {
+                if (!ElementHelper::isDraftOrRevision($e->element)) {
+                    CraftWarmer::$plugin->warmer->onElementSaved($e->element);
+                }
+            });
+        }
+    }
+
+    protected function registerUrls()
+    {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
+            $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch';
+            $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate';
+            $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
+            $event->rules['craftwarmer/terminate'] = 'craftwarmer/warm/terminate';
+        });
+        $settings = $this->getSettings();
+        if ($settings->enableFrontUrl) {
+            Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
+                $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
+                $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
+                $event->rules[$settings->frontUrl.'/batch'] = 'craftwarmer/warm/batch-front';
+                $event->rules[$settings->frontUrl.'/initiate'] = 'craftwarmer/warm/initiate-front';
+                $event->rules[$settings->frontUrl.'/unlock'] = 'craftwarmer/warm/unlock';
+                $event->rules[$settings->frontUrl.'/terminate'] = 'craftwarmer/warm/terminate-front';
+            });
+        }
+    }
+
+    protected function registerTemplates()
+    {
+        $settings = $this->getSettings();
+        if ($settings->enableFrontUrl) {
+            Event::on(View::class, View::EVENT_REGISTER_SITE_TEMPLATE_ROOTS, function (RegisterTemplateRootsEvent $event) {
+                $event->roots['craftwarmer'] = __DIR__ . '/templates';
+            });
+        }
+    }
+
+    protected function registerUtility()
+    {
+        Event::on(
+            Utilities::class,
+            Utilities::EVENT_REGISTER_UTILITY_TYPES,
+            function (RegisterComponentTypesEvent $event) {
+                $event->types[] = Utility::class;
+            }
         );
     }
 }

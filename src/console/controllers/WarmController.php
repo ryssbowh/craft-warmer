@@ -1,6 +1,6 @@
 <?php 
 
-namespace Ryssbowh\CraftWarmer\Console;
+namespace Ryssbowh\CraftWarmer\console\controllers;
 
 use Ryssbowh\CraftWarmer\CraftWarmer;
 use Ryssbowh\CraftWarmer\Observers\GuzzleObserver;

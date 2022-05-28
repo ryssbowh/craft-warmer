@@ -1,5 +1,17 @@
 # ryssbowh/craft-warmer Changelog
 
+## 2.1.0 - 2022-05-28
+### Added
+- Auto warm pages through a job when elements are saved
+### Fixed
+- No-js url not updated when changing front end url in settings
+
+## 1.1.0 - 2022-05-28
+### Added
+- Auto warm pages through a job when elements are saved
+### Fixed
+- No-js url not updated when changing front end url in settings
+
 ## 2.0.0 - 2022-05-10
 
 ### Changed

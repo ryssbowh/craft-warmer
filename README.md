@@ -1,4 +1,4 @@
-# Cache warmer for Craft 3.5
+# Cache warmer for Craft 4.x
 
 Build up your caches for your Craft site with a cache warmer.
 
@@ -24,6 +24,8 @@ The warmer will tell you which http code returns each of your urls, so you can q
 It's important that you set your config `generateTransformsBeforePageLoad` to `true` or your assets transforms won't be generated.
 
 You can send an email after each warmer's run.
+
+From 2.1.0 elements urls (and related elements urls) can be warmed automatically when they are saved, this will need to be enabled in the settings.
 
 ## Installation
 

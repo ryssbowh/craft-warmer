@@ -1,6 +1,6 @@
 <?php 
 
-namespace Ryssbowh\CraftWarmer\Controllers;
+namespace Ryssbowh\CraftWarmer\controllers;
 
 use Ryssbowh\CraftWarmer\Assets\FrontAsset;
 use Ryssbowh\CraftWarmer\CraftWarmer;

@@ -20,6 +20,7 @@ class Settings extends Model
     public $email = '';
     public $userAgent = '';
     public $sitemaps = [];
+    public $autoWarmElements = false;
 
     /**
      * @return array

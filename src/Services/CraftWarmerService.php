@@ -4,10 +4,15 @@ namespace Ryssbowh\CraftWarmer\Services;
 
 use Ryssbowh\CraftWarmer\CraftWarmer;
 use Ryssbowh\CraftWarmer\Exceptions\CraftWarmerException;
+use Ryssbowh\CraftWarmer\Jobs\WarmUrls;
 use Ryssbowh\CraftWarmer\Models\Settings;
 use Ryssbowh\CraftWarmer\Observers\GuzzleObserver;
 use Ryssbowh\PhpCacheWarmer\Warmer;
 use craft\base\Component;
+use craft\base\Element;
+use craft\elements\Category;
+use craft\elements\Entry;
+use craft\helpers\Queue;
 use craft\models\Site;
 use craft\web\View;
 use vipnytt\SitemapParser;
@@ -19,6 +24,8 @@ class CraftWarmerService extends Component
 	const LOG_FILE = '@root/storage/craftwarmer/log';
 
 	const EVENT_WARMED_ALL = 'craftwarmer.warmed_all';
+
+	const EVENT_AUTO_WARMED = 'craftwarmer.auto_warmed';
 
 	const EVENT_WARMED_BATCH = 'craftwarmer.warmed_batch';
 
@@ -129,26 +136,12 @@ class CraftWarmerService extends Component
 	}
 
 	/**
-	 * Get urls cached on disk
-	 * 
-	 * @return array
-	 */
-	protected function getCache(): array
-	{
-		$cache = \Craft::$app->cache->get(self::URLS_CACHE_KEY, false);
-		if ($cache === false) {
-			return $this->buildCache();
-		}
-		return $cache;
-	}
-
-	/**
-	 * Clear url caches
-	 */
-	public function clearCaches()
-	{
-		\Craft::$app->cache->delete(self::URLS_CACHE_KEY);
-	}
+     * Clear url caches
+     */
+    public function clearCaches()
+    {
+        \Craft::$app->cache->delete(self::URLS_CACHE_KEY);
+    }
 
 	/**
 	 * Is the warmer locked
@@ -180,6 +173,26 @@ class CraftWarmerService extends Component
 	}
 
 	/**
+	 * Warms some urls
+	 * 
+	 * @return  array url => code
+	 */
+	public function autoWarm(array $urls): array
+	{
+		$time = microtime(true);
+		\Craft::debug('Auto warming ' . sizeof($urls) .' urls', 'craft-warmer');
+		$settings = $this->getSettings();
+		$observer = new GuzzleObserver;
+		$warmer = new Warmer($settings->concurrentRequests, $this->getGuzzleOptions(), $observer);
+		$warmer->addUrls($urls);
+		$promise = $warmer->warm()->wait();
+		$this->writeLog($observer->getUrls());
+		$this->trigger(self::EVENT_AUTO_WARMED);
+		\Craft::debug('Auto warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used', 'craft-warmer');
+		return $observer->getUrls();
+	}
+
+	/**
 	 * Warms all the urls
 	 * 
 	 * @return  array url => code
@@ -197,7 +210,7 @@ class CraftWarmerService extends Component
 		$promise = $warmer->warm()->wait();
 		$this->writeLog($observer->getUrls());
 		$this->trigger(self::EVENT_WARMED_ALL);
-		\Craft::info('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used', 'craft-warmer');
+		\Craft::debug('Warmed '.sizeof($observer->getUrls()).' in '.(microtime(true) - $time).' seconds. '.(memory_get_peak_usage()/1000000).' MB memory used', 'craft-warmer');
 		return $observer->getUrls();
 	}
 
@@ -304,6 +317,62 @@ class CraftWarmerService extends Component
 		if (!$this->getSettings()->disableLocking and !$this->isLocked()) {
 			throw CraftWarmerException::notLocked();
 		}
+	}
+
+	/**
+	 * Auto warms pages related to an element when it's saved
+	 * 
+	 * @param Element $element
+	 */
+	public function onElementSaved(Element $element)
+	{
+		$urls = $this->getElementUrls($element);
+		$entries = Entry::find()->relatedTo($element)->all();
+		foreach ($entries as $entry) {
+			$urls = array_merge($urls, $this->getElementUrls($entry));
+		}
+		$categories = Category::find()->relatedTo($element)->all();
+		foreach ($categories as $category) {
+			$urls = array_merge($urls, $this->getElementUrls($category));
+		}
+		if ($urls) {
+			Queue::push(new WarmUrls([
+				'urls' => array_unique($urls)
+			]), null, 2);
+		}
+	}
+
+	/**
+	 * Get all the urls to warm for an element.
+	 * Will skip urls for sites that aren't enabled in config
+	 * Will add related element urls
+	 * 
+	 * @param  Element $element
+	 * @return array
+	 */
+	protected function getElementUrls(Element $element): array
+	{
+		$urls = [];
+		$site = $element->site;
+		$settings = CraftWarmer::$plugin->settings;
+		if (in_array($site->uid, $settings->sites) and $element->url) {
+			$urls[] = $element->url;
+		}
+		return $urls;
+	}
+
+	/**
+	 * Get urls cached on disk
+	 * 
+	 * @return array
+	 */
+	protected function getCache(): array
+	{
+		$cache = \Craft::$app->cache->get(self::URLS_CACHE_KEY, false);
+		if ($cache === false) {
+			return $this->buildCache();
+		}
+		return $cache;
 	}
 
 	/**

@@ -4,9 +4,10 @@
 
 <h2>{{ 'Front url'|t('craftwarmer') }}</h2>
 
-{{ forms.lightswitch({
+{{ forms.lightswitchField({
     id: 'enable-front-url-field',
-    label: 'Enabled'|t('craftwarmer'),
+    onLabel: 'Enabled'|t('craftwarmer'),
+    offLabel: 'Disabled'|t('craftwarmer'),
     name: 'enableFrontUrl',
     on: settings.enableFrontUrl
 }) }}
@@ -42,9 +43,8 @@
 <div class="sites" style="margin-top:20px">
     <h2>{{ 'Sites'|t('craftwarmer') }}</h2>
     {% for uid, name in sites %}
-        <h3>{{ name }}</h3>
-        {{ forms.lightswitch({
-            label: 'Enabled'|t('craftwarmer'),
+        {{ forms.lightswitchField({
+            label: name,
             name: 'sites[]',
             value: uid,
             class: 'site-enable',
@@ -55,7 +55,7 @@
                 label: 'Urls to ignore'|t('craftwarmer'),
                 name: 'ignore['~uid~']',
                 value: settings.getIgnore(uid),
-                instructions: 'Enter one valid regex (/forums\\/*/) or path (forums/article1) per line, don\'t include site url.'|t('craftwarmer'),
+                instructions: "Enter one valid regex (/forums\\/*/) or path (forums/article1) per line, don't include site url."|t('craftwarmer'),
                 cols: 50,
                 rows: 5
                 }) 
@@ -64,7 +64,7 @@
                 label: 'Sitemap'|t('craftwarmer'),
                 name: 'sitemaps['~uid~']',
                 value: settings.getSitemap(uid),
-                instructions: 'Don\'t include site url'|t('craftwarmer'),
+                instructions: "Don't include site url"|t('craftwarmer'),
                 size: 20,
                 required: true
                 }) 
@@ -73,9 +73,16 @@
     {% endfor %}
 </div>
 
+{{ forms.lightswitchField({
+    label: "Auto warm pages related to an element when it's saved"|t('craftwarmer'),
+    name: 'autoWarmElements',
+    on: settings.autoWarmElements,
+    tip: "Urls for disabled sites above won't be warmed"|t('craftwarmer')
+}) }}
+
 <h2>{{ 'Emailing'|t('craftwarmer') }}</h2>
 
-{{ forms.lightswitch({
+{{ forms.lightswitchField({
     id: 'email-me',
     label: 'Email me when the warmer finishes'|t('craftwarmer'),
     name: 'emailMe',
@@ -178,7 +185,11 @@
             email.slideUp('fast');
         }
     }
-    $('#settings-front-secret').keyup(function(){
+    $('#settings-front-url-field input').keyup(function(){
+        $('#settings-your-front-url .path').html($(this).val());
+        $('#settings-your-nojs-url .path').html($(this).val());
+    });
+    $('#settings-front-secret-field input').keyup(function(){
         $('#settings-your-front-url .secret').html($(this).val());
         $('#settings-your-nojs-url .secret').html($(this).val());
     });
