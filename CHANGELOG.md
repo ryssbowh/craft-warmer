@@ -1,5 +1,9 @@
 # ryssbowh/craft-warmer Changelog
 
+## 1.1.1 - 2022-10-12
+### Changed
+- Changed plugin icons
+
 ## 1.1.0 - 2022-05-28
 ### Added
 - Auto warm pages through a job when elements are saved
