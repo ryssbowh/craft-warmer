@@ -31,7 +31,9 @@
         }
     },
     "extra": {
-        "documentationUrl": "https://github.com/ryssbowh/craft-warmer",
+        "documentationUrl": "https://puzzlers.run/plugins/cache-warmer",
+        "developer": "The Web Puzzlers",
+        "developerUrl": "https://puzzlers.run",
         "name": "Cache Warmer",
         "handle": "craftwarmer",
         "class": "Ryssbowh\\CraftWarmer\\CraftWarmer"
