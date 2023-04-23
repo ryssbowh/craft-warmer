@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Ryssbowh\CraftWarmer\Services;
 
@@ -32,7 +32,7 @@ class CraftWarmerService extends Component
 	const URLS_CACHE_KEY = 'craftwarmer.urls';
 
 	/**
-	 * Type of current request 
+	 * Type of current request
 	 * @var string nojs, ajax or console
 	 */
 	protected $requestType = '';
@@ -48,7 +48,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get request type
-	 * 
+	 *
 	 * @return string
 	 */
 	public function getRequestType(): string
@@ -66,7 +66,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get all sites enabled in config
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getCrawlableSites(): array
@@ -80,7 +80,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get urls and sites to index
-	 * 
+	 *
 	 * @param  $flat do we want a flat array
 	 * @return array
 	 */
@@ -94,7 +94,7 @@ class CraftWarmerService extends Component
 		if ($flat) {
 			$data2 = [];
 			array_walk($data, function($array) use (&$data2){
-				$data2 = $data2 + $array;
+				$data2 = array_merge($data2, $array);
 			});
 			return $data2;
 		}
@@ -103,7 +103,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Total number of urls to crawl
-	 * 
+	 *
 	 * @return int
 	 */
 	public function getTotalUrls(): int
@@ -113,7 +113,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Calculate urls to crawl, and cache them.
-	 * 
+	 *
 	 * @return array
 	 */
 	public function buildCache(): array
@@ -145,7 +145,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Is the warmer locked
-	 * 
+	 *
 	 * @return bool
 	 */
 	public function isLocked(): bool
@@ -155,7 +155,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Initiate the warmer, locks it and build the urls
-	 * 
+	 *
 	 * @param $type nojs, console or ajax
 	 * @throws CraftWarmerException
 	 * @return bool has the execution time been set properly
@@ -174,7 +174,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Warms some urls
-	 * 
+	 *
 	 * @return  array url => code
 	 */
 	public function autoWarm(array $urls): array
@@ -194,7 +194,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Warms all the urls
-	 * 
+	 *
 	 * @return  array url => code
 	 */
 	public function warmAll(): array
@@ -216,7 +216,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Warm one batch of urls
-	 * 
+	 *
 	 * @param  int    $offset
 	 * @return  array url => code
 	 */
@@ -271,7 +271,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Setting max execution time to infinite
-	 * 
+	 *
 	 * @return bool
 	 */
 	public function setExecutionTime(): bool
@@ -283,7 +283,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get last run logs
-	 * 
+	 *
 	 * @return array
 	 */
 	public function getLastRunLogs(): array
@@ -297,7 +297,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Date of the last run
-	 * 
+	 *
 	 * @return DateTime|null
 	 */
 	public function getLastRunDate(): ?\DateTime
@@ -321,7 +321,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Auto warms pages related to an element when it's saved
-	 * 
+	 *
 	 * @param Element $element
 	 */
 	public function onElementSaved(Element $element)
@@ -346,7 +346,7 @@ class CraftWarmerService extends Component
 	 * Get all the urls to warm for an element.
 	 * Will skip urls for sites that aren't enabled in config
 	 * Will add related element urls
-	 * 
+	 *
 	 * @param  Element $element
 	 * @return array
 	 */
@@ -363,7 +363,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get urls cached on disk
-	 * 
+	 *
 	 * @return array
 	 */
 	protected function getCache(): array
@@ -377,7 +377,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Send email
-	 * 
+	 *
 	 * @param  array  $urls
 	 */
 	protected function sendEmail(array $urls): bool
@@ -426,7 +426,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Write an array of url => code to the log file
-	 * 
+	 *
 	 * @param  array  $urls
 	 */
 	protected function writeLog(array $urls)
@@ -438,7 +438,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get log file path
-	 * 
+	 *
 	 * @return string
 	 */
 	protected function getLogFile(): string
@@ -456,7 +456,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Filters out urls to ignore
-	 * 
+	 *
 	 * @param  array  $urls
 	 * @param  Site   $site
 	 * @return array
@@ -491,7 +491,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * Get lock file full path
-	 * 
+	 *
 	 * @return string
 	 */
 	protected function getLockFile(): string
@@ -501,7 +501,7 @@ class CraftWarmerService extends Component
 
 	/**
 	 * get plugin settings
-	 * 
+	 *
 	 * @return Settings
 	 */
 	protected function getSettings(): Settings
