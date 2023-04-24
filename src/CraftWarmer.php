@@ -39,6 +39,7 @@ class CraftWarmer extends Plugin
         $this->registerUrls();
         $this->registerTemplates();
         $this->registerElementEvents();
+        $this->registerClearCaches();
     }
 
     /**
@@ -48,6 +49,22 @@ class CraftWarmer extends Plugin
     {
         parent::afterSaveSettings();
         $this->warmer->clearCaches();
+    }
+
+    /**
+     * Register a clear cache item
+     */
+    protected function registerClearCaches()
+    {
+        Event::on(ClearCaches::class, ClearCaches::EVENT_REGISTER_CACHE_OPTIONS, function (Event $event) {
+            $event->options[] = [
+                'key' => 'warmer-cache',
+                'label' => \Craft::t('craftwarmer', 'Warmer sitemap urls'),
+                'action' => function () {
+                    CraftWarmer::$plugin->warmer->clearCaches();
+                }
+            ];
+        });
     }
 
     /**
@@ -68,10 +85,10 @@ class CraftWarmer extends Plugin
      */
     protected function settingsHtml(): string
     {
-    	$sites = [];
-    	foreach (\Craft::$app->sites->getAllSites() as $site) {
-    		$sites[$site->uid] = $site->name;
-    	}
+        $sites = [];
+        foreach (\Craft::$app->sites->getAllSites() as $site) {
+            $sites[$site->uid] = $site->name;
+        }
         return \Craft::$app->view->renderTemplate(
             'craftwarmer/settings',
             [
@@ -94,7 +111,7 @@ class CraftWarmer extends Plugin
 
     protected function registerUrls()
     {
-        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function(RegisterUrlRulesEvent $event) {
+        Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_CP_URL_RULES, function (RegisterUrlRulesEvent $event) {
             $event->rules['craftwarmer/batch'] = 'craftwarmer/warm/batch';
             $event->rules['craftwarmer/initiate'] = 'craftwarmer/warm/initiate';
             $event->rules['craftwarmer/unlock'] = 'craftwarmer/warm/unlock';
@@ -102,7 +119,7 @@ class CraftWarmer extends Plugin
         });
         $settings = $this->getSettings();
         if ($settings->enableFrontUrl) {
-            Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function(RegisterUrlRulesEvent $event) use ($settings) {
+            Event::on(UrlManager::class, UrlManager::EVENT_REGISTER_SITE_URL_RULES, function (RegisterUrlRulesEvent $event) use ($settings) {
                 $event->rules[$settings->frontUrl] = 'craftwarmer/warm/front';
                 $event->rules[$settings->frontUrl.'/nojs'] = 'craftwarmer/warm/front-no-js';
                 $event->rules[$settings->frontUrl.'/batch'] = 'craftwarmer/warm/batch-front';

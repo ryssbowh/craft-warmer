@@ -2,9 +2,10 @@
 
 ## 2.1.3 - 2023-04-24
 
-### Changed
+### Fixed
 
 - Fixed multisite issue [#1](https://github.com/ryssbowh/craft-warmer/pull/1). Thanks [joshuakeck](https://github.com/joshuakeck)
+- Reinstated clear url caches in utilities
 
 ## 2.1.2 - 2022-11-18
 
