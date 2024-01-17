@@ -1,5 +1,11 @@
 # ryssbowh/craft-warmer Changelog
 
+## 1.1.3 - 2024-01-17
+
+### Fixed
+
+- Removed duplicated cache building for console and nojs requests
+
 ## 1.1.2 - 2022-11-18
 
 ### Changed

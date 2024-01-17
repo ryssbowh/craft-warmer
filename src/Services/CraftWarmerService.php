@@ -159,7 +159,9 @@ class CraftWarmerService extends Component
 		$this->requestType = $type;
 		$this->resetLog();
 		$this->lock();
-		$this->buildCache();
+		if ($type == 'console' or $type == 'nojs') {
+            $this->buildCache();
+        }
 		return $this->setExecutionTime();
 	}
 
