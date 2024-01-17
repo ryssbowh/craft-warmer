@@ -5,6 +5,7 @@
 ### Fixed
 
 - Removed duplicated cache building for console and nojs requests
+- Fixed issue with offset not taken into account when warming a batch
 
 ## 1.1.2 - 2022-11-18
 

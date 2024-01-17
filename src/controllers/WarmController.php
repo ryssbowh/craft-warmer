@@ -89,7 +89,7 @@ class WarmController extends Controller
 	public function actionBatch()
 	{
 		$this->requireAcceptsJson();
-		$offset = \Craft::$app->request->getQueryParam('offset', 0);
+		$offset = \Craft::$app->request->getParam('offset', 0);
 		$service = CraftWarmer::$plugin->warmer;
 		$service->setRequestType('ajax');
 		return $this->asJson($service->warmBatch($offset));
